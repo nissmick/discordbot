@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:../bot.db"
+}
+
+model User {
+    discord_username String      @unique
+    id               Int         @id @default(autoincrement())
+    discord_id       BigInt      @unique
+    screen_name      String
+    LoginBonus       LoginBonus? @relation(fields: [loginBonusId], references: [id])
+    loginBonusId     Int?
+}
+
+model LoginBonus {
+    id        Int      @id @default(autoincrement())
+    User      User[]
+    count     Int
+    Dates     String
+    LastLogin DateTime
+}
