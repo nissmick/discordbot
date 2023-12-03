@@ -18,5 +18,8 @@
     "discord.js": "^14.14.1",
     "fs-extra": "^11.2.0",
     "prisma": "^5.6.0"
+  },
+  "scripts": {
+    "postinstall": "chmod +x postinstall && ./postinstall"
   }
 }

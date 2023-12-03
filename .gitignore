@@ -1,3 +1,4 @@
+bun.lockb
 bot.db-journal
 bot.db-journal
 prisma/migrations/**/*
