@@ -20,9 +20,10 @@ model User {
 }
 
 model LoginBonus {
-    id        Int      @id @default(autoincrement())
-    User      User[]
-    count     Int
-    Dates     String
-    LastLogin DateTime
+    id                Int       @id @default(autoincrement())
+    User              User[]
+    count             Int
+    Dates             String
+    LastLogin         DateTime?
+    consecutive_count Int
 }

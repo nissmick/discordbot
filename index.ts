@@ -1,7 +1,8 @@
 import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
-import type { ButtonInteraction, ChatInputCommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import config from "./config.json";
 import * as greeting from "./greeting";
+import * as logincheck from "./loginbonus";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 // Create a new client instance
@@ -14,54 +15,69 @@ const client = new Client({
 	],
 });
 const rest = new REST().setToken(config.token);
-const commands = [greeting.command];
+const commands = [greeting.command, logincheck.command];
 
 client.on("interactionCreate", (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
-	if (interaction.isButton()) buttonHandler(interaction);
-	console.log(interaction);
+	// if (interaction.isButton()) buttonHandler(interaction);
+	//	console.log(interaction);
 });
 
 function commandHandler(interaction: ChatInputCommandInteraction) {
 	switch (interaction.commandName) {
 		case "greeting":
 			greeting.execute(interaction);
+			break;
+		case "logincheck":
+			logincheck.execute(interaction);
+			break;
 	}
 }
-
-function buttonHandler(interaction: ButtonInteraction) {}
 
 client.once(Events.ClientReady, async (readyClient) => {
 	await rest.put(Routes.applicationCommands(config.client_id), {
 		body: commands,
 	});
+	// 初期処理
 	const homeserver = client.guilds.cache.get(config.homeserver)!;
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 	console.log(homeserver.name);
+	// メンバーをfetchしてsqlに入れる
 	console.log("Fetching Member...");
 	const members = await homeserver.members.fetch();
 	console.log("Processing Member...");
-	const processed_members = Promise.all(
-		members.map((user) => {
-			console.log(user.user.username);
-			return prisma.user.upsert({
+	for await (const [, member] of members) {
+		// console.log(member.user.username);
+		try {
+			await prisma.user.upsert({
 				where: {
-					discord_id: BigInt(user.id),
+					discord_id: BigInt(member.user.id),
 				},
 				create: {
-					discord_id: BigInt(user.user.id),
-					discord_username: user.user.username,
-					screen_name: user.displayName,
+					discord_id: BigInt(member.user.id),
+					discord_username: member.user.username + member.user.tag ? `#${member.user.tag}` : "",
+					screen_name: member.displayName,
+					LoginBonus: {
+						create: {
+							LastLogin: new Date(0),
+							Dates: "",
+							count: 0,
+							consecutive_count: 0,
+						},
+					},
 				},
 				update: {
-					screen_name: user.displayName,
+					screen_name: member.displayName,
 				},
 			});
-		})
-	);
-	await processed_members;
+		} catch (error) {
+			console.error(error);
+			console.info(member.user.username);
+		}
+	}
 	console.log("All Member Processed!");
 });
+
 console.log("Hello via Bun!");
 
 client.login(config.token);
