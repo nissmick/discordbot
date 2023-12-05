@@ -20,12 +20,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 				},
 				data: {
 					LoginBonus: {
-						create: {
-							Dates: "",
-							LastLogin: "1900-01-01T00:00",
-							consecutive_count: 0,
-							count: 0,
-						},
+						create: {},
 					},
 				},
 			})
@@ -86,7 +81,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 		.setAuthor({
 			name: "出席確認",
 		});
-	await interaction.editReply({ embeds: [embed] });
+	await interaction.editReply({ embeds: [embed], content: "" });
 };
 /*
  */

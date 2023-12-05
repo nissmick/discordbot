@@ -51,5 +51,5 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 			}
 		});
 	embed.setDescription(result_text);
-	await interaction.editReply({ embeds: [embed] });
+	await interaction.editReply({ embeds: [embed], content: "" });
 };
