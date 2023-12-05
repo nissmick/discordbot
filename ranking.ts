@@ -1,0 +1,55 @@
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { prisma } from "./store";
+
+export const command = new SlashCommandBuilder()
+	.setName("ranking")
+	.setDescription("ランキングを確認")
+	.addNumberOption((c) => {
+		return c
+			.setName("min_login")
+			.setDescription("最低ログイン数")
+			.setNameLocalization("ja", "最低ログイン数")
+			.setRequired(true)
+			.setMinValue(1);
+	});
+export const execute = async (interaction: ChatInputCommandInteraction) => {
+	await interaction.reply({ content: "処理中..." /*, ephemeral: true*/ });
+	const min_login = interaction.options.getNumber("min_login")!;
+	const embed = new EmbedBuilder().setTitle("Ranking");
+	const matcheduser = await prisma.user.findMany({
+		where: {
+			LoginBonus: {
+				count: {
+					gte: min_login,
+				},
+			},
+		},
+		include: {
+			LoginBonus: true,
+		},
+	});
+	let result_text = "";
+
+	const max = Math.max(...matcheduser.map((item) => item.LoginBonus!.count));
+	let beforecount = max;
+	let index = 1;
+	matcheduser
+		.toSorted((a, b) => {
+			return b.LoginBonus!.count - a.LoginBonus!.count;
+		})
+		.forEach((user, i) => {
+			const { count } = user.LoginBonus!;
+			if (beforecount !== count) {
+				beforecount = count;
+				index += i;
+			}
+			console.log(user.discord_username + ` count: ${count}`);
+			if (count === max) {
+				result_text += `**#${index} |<@${user.discord_id}> ${count}日** \n`;
+			} else {
+				result_text += `#${index} |<@${user.discord_id}> ${count}日 \n`;
+			}
+		});
+	embed.setDescription(result_text);
+	await interaction.editReply({ embeds: [embed] });
+};

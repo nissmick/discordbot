@@ -3,6 +3,7 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import config from "./config.json";
 import * as greeting from "./greeting";
 import * as logincheck from "./loginbonus";
+import * as ranking from "./ranking";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 // Create a new client instance
@@ -15,7 +16,7 @@ const client = new Client({
 	],
 });
 const rest = new REST().setToken(config.token);
-const commands = [greeting.command, logincheck.command];
+const commands = [greeting.command, logincheck.command, ranking.command];
 
 client.on("interactionCreate", (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
@@ -31,6 +32,8 @@ function commandHandler(interaction: ChatInputCommandInteraction) {
 		case "logincheck":
 			logincheck.execute(interaction);
 			break;
+		case "ranking":
+			ranking.execute(interaction);
 	}
 }
 
@@ -58,12 +61,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 					discord_username: member.user.username + member.user.tag ? `#${member.user.tag}` : "",
 					screen_name: member.displayName,
 					LoginBonus: {
-						create: {
-							LastLogin: new Date(0),
-							Dates: "",
-							count: 0,
-							consecutive_count: 0,
-						},
+						create: {},
 					},
 				},
 				update: {
