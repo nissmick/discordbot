@@ -4,6 +4,7 @@ import config from "./config.json";
 import * as greeting from "./greeting";
 import * as logincheck from "./loginbonus";
 import * as ranking from "./ranking";
+import * as zandaka from "./zandaka";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 // Create a new client instance
@@ -16,7 +17,7 @@ const client = new Client({
 	],
 });
 const rest = new REST().setToken(config.token);
-const commands = [greeting.command, logincheck.command, ranking.command];
+const commands = [greeting.command, logincheck.command, ranking.command, zandaka.command];
 
 client.on("interactionCreate", (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
@@ -34,6 +35,10 @@ function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case "ranking":
 			ranking.execute(interaction);
+			break;
+		case "zandaka":
+			zandaka.execute(interaction);
+			break;
 	}
 }
 
