@@ -50,6 +50,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 				result_text += `#${index} |<@${user.discord_id}> ${count}日 \n`;
 			}
 		});
-	embed.setDescription(result_text);
+	embed.setDescription(result_text || "該当するユーザーは一人もいませんでした。");
 	await interaction.editReply({ embeds: [embed], content: "" });
 };
