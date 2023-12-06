@@ -3,7 +3,7 @@ import { prisma } from "./store";
 
 export const command = new SlashCommandBuilder().setName("logincheck").setDescription("出席を確認");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-	await interaction.reply("処理中...");
+	const replied = await interaction.reply("処理中...");
 	const now = new Date();
 	const user = await prisma.user.findUnique({
 		where: { discord_id: BigInt(interaction.user.id) },
@@ -32,6 +32,8 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
 	if (datediff === 0) {
 		await interaction.editReply("今日はもうログイン済みです");
+		const msg = await replied.fetch();
+		await msg.react("❌");
 		return;
 	} else if (datediff === 1) {
 		consecutive_count = LoginBonus.consecutive_count + 1;
@@ -82,6 +84,8 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 			name: "出席確認",
 		});
 	await interaction.editReply({ embeds: [embed], content: "" });
+	const msg = await replied.fetch();
+	await msg.react("✅");
 };
 /*
  */

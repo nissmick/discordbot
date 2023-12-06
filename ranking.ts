@@ -13,7 +13,7 @@ export const command = new SlashCommandBuilder()
 			.setMinValue(1);
 	});
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-	await interaction.reply({ content: "処理中..." /*, ephemeral: true*/ });
+	const replied = await interaction.reply({ content: "処理中..." /*, ephemeral: true*/ });
 	const min_login = interaction.options.getNumber("min_login")!;
 	const embed = new EmbedBuilder().setTitle("Ranking");
 	const matcheduser = await prisma.user.findMany({
@@ -50,6 +50,15 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 				result_text += `#${index} |<@${user.discord_id}> ${count}日 \n`;
 			}
 		});
-	embed.setDescription(result_text || "該当するユーザーは一人もいませんでした。");
-	await interaction.editReply({ embeds: [embed], content: "" });
+	if (result_text) {
+		embed.setDescription(result_text);
+		await interaction.editReply({ embeds: [embed], content: "" });
+		const msg = await replied.fetch();
+		await msg.react("✅");
+	} else {
+		embed.setDescription("該当するユーザーは一人もいませんでした。");
+		await interaction.editReply({ embeds: [embed], content: "" });
+		const msg = await replied.fetch();
+		await msg.react("❌");
+	}
 };
