@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { JSDOM } from "jsdom";
-export const command = new SlashCommandBuilder().setName("zandaka").setDescription("ぽちくんの残高を開示します");
+import { Commands } from "./enum";
+export const command = new SlashCommandBuilder().setName(Commands.zandaka).setDescription("ぽちくんの残高を開示します");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
 	const replied = await interaction.reply("取得中...");
 	const res = await fetch("https://www.ic-kururu.jp/point/index.php", {

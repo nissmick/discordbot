@@ -1,7 +1,8 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "./store";
+import { Commands } from "./enum";
 
-export const command = new SlashCommandBuilder().setName("logincheck").setDescription("出席を確認");
+export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
 	const replied = await interaction.reply("処理中...");
 	const now = new Date();

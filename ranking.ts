@@ -1,8 +1,9 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "./store";
+import { Commands } from "./enum";
 
 export const command = new SlashCommandBuilder()
-	.setName("ranking")
+	.setName(Commands.ranking)
 	.setDescription("ランキングを確認")
 	.addNumberOption((c) => {
 		return c
