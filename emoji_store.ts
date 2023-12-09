@@ -34,17 +34,14 @@ async function fetchEmojiWithCache(url: `https://${string}/api/emojis`, cache: b
 
 export class EmojiProvider {
 	domain: string;
-	cache: emoji[];
 	map: Map<string, emoji>;
 	constructor(domain = "misskey.io") {
 		this.domain = domain;
-		this.cache = [];
 		this.map = new Map<string, emoji>();
 	}
 	async fetch(usecache: boolean) {
 		const emojis = await fetchEmojiWithCache(`https://${this.domain}/api/emojis`, usecache);
-		this.cache.push(...emojis);
-		this.cache.forEach((e) => {
+		emojis.forEach((e) => {
 			this.map.set(e.name, e);
 		});
 	}
