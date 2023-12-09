@@ -27,6 +27,8 @@ export const command = new SlashCommandBuilder()
 			.setRequired(false)
 	);*/
 export const execute: CommandHandler = (interaction, user) => {
-	const emoji_name = interaction.options.getString(Options.emoji_name, true);
+	const emoji_name = interaction.options
+		.getString(Options.emoji_name, true)
+		.replace(/<?:([a-zA-Z0-9_-~]*):(?:\d+>)?/, "$1");
 	interaction.reply(user.emojiResolver.get(emoji_name)?.url || "エラー");
 };
