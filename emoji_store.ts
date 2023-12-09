@@ -17,7 +17,7 @@ async function fetchEmojiWithCache(url: `https://${string}/api/emojis`, cache: b
 	const now = new Date();
 	const cached = Cache.get(url);
 	if (cache && cached && now.valueOf() - cached.cached_at.valueOf() < 1000 * 60 * 5) {
-		console.log("use cache");
+		// console.log("use cache");
 		return cached.data;
 	} else {
 		console.log("fetching");
@@ -101,8 +101,8 @@ export class EmojiResolver {
 	async fetchAll(usecache: boolean = true) {
 		await this.repository.fetchAll(usecache);
 	}
-	get(emoji_name: string) {
-		const path = [...this.PATH.keys()];
+	get(emoji_name: string, path_overwrite: string[] = []) {
+		const path = [...path_overwrite, ...this.PATH.keys()];
 		for (const domain of path) {
 			const provider = this.repository.get(domain)!;
 			const emoji = provider.get(emoji_name);

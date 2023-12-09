@@ -5,11 +5,13 @@ import * as greeting from "./greeting";
 import * as logincheck from "./loginbonus";
 import * as ranking from "./ranking";
 import * as zandaka from "./zandaka";
+import * as misskey_emoji from "./misskey-emoji";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
+import { EmojiResolver } from "./emoji_store";
 const rest = new REST().setToken(config.token);
-const commands = [greeting.command, logincheck.command, ranking.command, zandaka.command];
-
+const commands = [greeting.command, logincheck.command, ranking.command, zandaka.command, misskey_emoji.command];
+const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
 	// if (interaction.isButton()) buttonHandler(interaction);
@@ -66,7 +68,11 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			LoginBonus: true,
 		},
 	}))!;
-	const arg = [interaction, userdata] as const;
+	const user = {
+		...userdata,
+		emojiResolver: emojiResolvers.get(userdata.discord_id)!,
+	};
+	const arg = [interaction, user] as const;
 	switch (interaction.commandName) {
 		case Commands.greeting:
 			greeting.execute(...arg);
@@ -80,6 +86,8 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 		case Commands.zandaka:
 			zandaka.execute(...arg);
 			break;
+		case Commands.misskey_emoji:
+			misskey_emoji.execute(...arg);
 	}
 }
 
@@ -98,7 +106,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 	for await (const [, member] of members) {
 		// console.log(member.user.username);
 		try {
-			await prisma.user.upsert({
+			const userdata = await prisma.user.upsert({
 				where: {
 					discord_id: BigInt(member.user.id),
 				},
@@ -114,6 +122,9 @@ client.once(Events.ClientReady, async (readyClient) => {
 					screen_name: member.displayName,
 				},
 			});
+			const resolver = new EmojiResolver(userdata.emoji_default_server, "misskey.io", "misskey.04.si");
+			await resolver.fetchAll();
+			emojiResolvers.set(BigInt(member.user.id), resolver);
 		} catch (error) {
 			console.error(error);
 			console.info(member.user.username);

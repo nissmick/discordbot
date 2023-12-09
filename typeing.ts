@@ -1,4 +1,5 @@
 import type { ChatInputCommandInteraction } from "discord.js";
+import type { EmojiResolver } from "./emoji_store";
 type UserData = {
 	LoginBonus: {
 		id: number;
@@ -13,6 +14,7 @@ type UserData = {
 	discord_id: bigint;
 	screen_name: string;
 	emoji_default_server: string;
+	emojiResolver: EmojiResolver;
 };
 type CommandHandler = (interaction: ChatInputCommandInteraction, user: UserData) => void;
 

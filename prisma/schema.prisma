@@ -11,12 +11,13 @@ datasource db {
 }
 
 model User {
-    discord_username String      @unique
-    id               Int         @id @default(autoincrement())
-    discord_id       BigInt      @unique
-    screen_name      String
-    LoginBonus       LoginBonus? @relation(fields: [loginBonusId], references: [id])
-    loginBonusId     Int?
+    discord_username     String      @unique
+    id                   Int         @id @default(autoincrement())
+    discord_id           BigInt      @unique
+    screen_name          String
+    LoginBonus           LoginBonus? @relation(fields: [loginBonusId], references: [id])
+    loginBonusId         Int?
+    emoji_default_server String      @default("misskey.io")
 }
 
 model LoginBonus {
