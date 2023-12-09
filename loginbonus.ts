@@ -1,18 +1,13 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "./store";
 import { Commands } from "./enum";
+import { CommandHandler } from "./typeing";
 
 export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
-export const execute = async (interaction: ChatInputCommandInteraction) => {
+export const execute: CommandHandler = async (interaction, user) => {
 	const replied = await interaction.reply("処理中...");
 	const now = new Date();
-	const user = await prisma.user.findUnique({
-		where: { discord_id: BigInt(interaction.user.id) },
-		include: {
-			LoginBonus: true,
-		},
-	});
-	let LoginBonus = user!.LoginBonus;
+	let LoginBonus = user.LoginBonus;
 	if (!LoginBonus) {
 		LoginBonus = (await prisma.user
 			.update({

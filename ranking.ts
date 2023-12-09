@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { prisma } from "./store";
 import { Commands } from "./enum";
+import { CommandHandler } from "./typeing";
 
 export const command = new SlashCommandBuilder()
 	.setName(Commands.ranking)
@@ -13,7 +14,7 @@ export const command = new SlashCommandBuilder()
 			.setRequired(true)
 			.setMinValue(1);
 	});
-export const execute = async (interaction: ChatInputCommandInteraction) => {
+export const execute: CommandHandler = async (interaction) => {
 	const replied = await interaction.reply({ content: "処理中..." /*, ephemeral: true*/ });
 	const min_login = interaction.options.getNumber("min_login")!;
 	const embed = new EmbedBuilder().setTitle("Ranking");

@@ -1,38 +1,12 @@
-import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
+import { Events, REST, Routes } from "discord.js";
 import type { ChatInputCommandInteraction, Message } from "discord.js";
 import config from "./config.json";
 import * as greeting from "./greeting";
 import * as logincheck from "./loginbonus";
 import * as ranking from "./ranking";
 import * as zandaka from "./zandaka";
-import { PrismaClient } from "@prisma/client";
 import { Commands } from "./enum";
-const prisma = new PrismaClient();
-// Create a new client instance
-const client = new Client({
-	intents: [
-		GatewayIntentBits.AutoModerationConfiguration,
-		GatewayIntentBits.AutoModerationExecution,
-		GatewayIntentBits.DirectMessageReactions,
-		GatewayIntentBits.DirectMessageTyping,
-		GatewayIntentBits.DirectMessages,
-		GatewayIntentBits.GuildEmojisAndStickers,
-		GatewayIntentBits.GuildIntegrations,
-		GatewayIntentBits.GuildInvites,
-		GatewayIntentBits.GuildMembers,
-		GatewayIntentBits.GuildMessageReactions,
-		GatewayIntentBits.GuildMessageTyping,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.GuildModeration,
-		GatewayIntentBits.GuildModeration,
-		GatewayIntentBits.GuildPresences,
-		GatewayIntentBits.GuildScheduledEvents,
-		GatewayIntentBits.GuildVoiceStates,
-		GatewayIntentBits.GuildWebhooks,
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.MessageContent,
-	],
-});
+import { client, prisma } from "./store";
 const rest = new REST().setToken(config.token);
 const commands = [greeting.command, logincheck.command, ranking.command, zandaka.command];
 
@@ -83,19 +57,28 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	}
 });
 
-function commandHandler(interaction: ChatInputCommandInteraction) {
+async function commandHandler(interaction: ChatInputCommandInteraction) {
+	const userdata = (await prisma.user.findUnique({
+		where: {
+			discord_id: BigInt(interaction.user.id),
+		},
+		include: {
+			LoginBonus: true,
+		},
+	}))!;
+	const arg = [interaction, userdata] as const;
 	switch (interaction.commandName) {
 		case Commands.greeting:
-			greeting.execute(interaction);
+			greeting.execute(...arg);
 			break;
 		case Commands.logincheck:
-			logincheck.execute(interaction);
+			logincheck.execute(...arg);
 			break;
 		case Commands.ranking:
-			ranking.execute(interaction);
+			ranking.execute(...arg);
 			break;
 		case Commands.zandaka:
-			zandaka.execute(interaction);
+			zandaka.execute(...arg);
 			break;
 	}
 }
