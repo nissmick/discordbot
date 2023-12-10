@@ -1,7 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { JSDOM } from "jsdom";
-import { Commands } from "./enum";
-import { CommandHandler } from "./typeing";
+import { Commands } from "../enum";
+import { CommandHandler } from "../typeing";
 export const command = new SlashCommandBuilder().setName(Commands.zandaka).setDescription("ぽちくんの残高を開示します");
 export const execute: CommandHandler = async (interaction) => {
 	const replied = await interaction.reply("取得中...");

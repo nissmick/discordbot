@@ -1,11 +1,11 @@
 import { Events, REST, Routes } from "discord.js";
 import type { ChatInputCommandInteraction, Message } from "discord.js";
 import config from "./config.json";
-import * as greeting from "./greeting";
-import * as logincheck from "./loginbonus";
-import * as ranking from "./ranking";
-import * as zandaka from "./zandaka";
-import * as misskey_emoji from "./misskey-emoji";
+import * as greeting from "./commands/greeting";
+import * as logincheck from "./commands/loginbonus";
+import * as ranking from "./commands/ranking";
+import * as zandaka from "./commands/zandaka";
+import * as misskey_emoji from "./commands/misskey-emoji";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";

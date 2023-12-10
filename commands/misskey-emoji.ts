@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { Commands } from "./enum";
-import type { CommandHandler } from "./typeing";
+import { Commands } from "../enum";
+import type { CommandHandler } from "../typeing";
 
 const enum Options {
 	emoji_name = "emoji_name",

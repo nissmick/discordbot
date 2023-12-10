@@ -1,7 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { prisma } from "./store";
-import { Commands } from "./enum";
-import { CommandHandler } from "./typeing";
+import { prisma } from "../store";
+import { Commands } from "../enum";
+import { CommandHandler } from "../typeing";
 
 export const command = new SlashCommandBuilder()
 	.setName(Commands.ranking)
