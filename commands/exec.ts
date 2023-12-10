@@ -27,16 +27,28 @@ export const execute: CommandHandler = async (interaction) => {
 				interaction,
 				interaction.channel
 			);
+			if (result === undefined) {
+				await interaction.editReply("undefined");
+				return;
+			}
 			try {
 				await interaction.editReply({
 					content: "```js\n" + JSON.stringify(result).replaceAll("`", "\\`") + "```",
 				});
+
+				return;
 			} catch {
-				await interaction.editReply({ content: "```js\n" + result.toString().replaceAll("`", "\\`") + "```" });
+				await interaction.editReply({
+					content: "```js\n" + result.toString().replaceAll("`", "\\`") + "```",
+				});
+				return;
 			}
 		} catch (error) {
 			if (error instanceof Error) {
-				await interaction.editReply({ content: "```js\n" + error.stack?.replaceAll("`", "\\`") + "```" });
+				await interaction.editReply({
+					content: "```js\n" + error.stack?.replaceAll("`", "\\`") + "```",
+				});
+				return;
 			}
 		}
 	} else {
