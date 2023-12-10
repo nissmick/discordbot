@@ -6,11 +6,19 @@ import * as logincheck from "./commands/loginbonus";
 import * as ranking from "./commands/ranking";
 import * as zandaka from "./commands/zandaka";
 import * as misskey_emoji from "./commands/misskey-emoji";
+import * as exec from "./commands/exec";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 const rest = new REST().setToken(config.token);
-const commands = [greeting.command, logincheck.command, ranking.command, zandaka.command, misskey_emoji.command];
+const commands = [
+	greeting.command,
+	logincheck.command,
+	ranking.command,
+	zandaka.command,
+	misskey_emoji.command,
+	exec.command,
+];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
@@ -88,6 +96,9 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case Commands.misskey_emoji:
 			misskey_emoji.execute(...arg);
+			break;
+		case Commands.exec:
+			exec.execute(...arg);
 	}
 }
 

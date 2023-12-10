@@ -4,4 +4,5 @@ export enum Commands {
 	ranking = "ranking",
 	zandaka = "zandaka",
 	misskey_emoji = "misskey_emoji",
+	exec = "exec",
 }
