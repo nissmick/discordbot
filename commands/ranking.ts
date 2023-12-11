@@ -43,7 +43,7 @@ export const execute: CommandHandler = async (interaction) => {
 			const { count } = user.LoginBonus!;
 			if (beforecount !== count) {
 				beforecount = count;
-				index += i;
+				index = i + 1;
 			}
 			console.log(user.discord_username + ` count: ${count}`);
 			if (count === max) {
