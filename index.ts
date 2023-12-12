@@ -10,6 +10,7 @@ import * as exec from "./commands/exec";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
+import stringWidth from "string-width";
 const rest = new REST().setToken(config.token);
 const commands = [
 	greeting.command,
@@ -33,7 +34,9 @@ const editedStore: {
 		  }
 		| undefined;
 } = {};
-
+client.on(Events.MessageCreate, async (message) => {
+	logger(message, "create");
+});
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	if (newMessage.author?.id === config.client_id) return;
 	if (oldMessage.content && newMessage.content) {
@@ -147,3 +150,39 @@ client.once(Events.ClientReady, async (readyClient) => {
 console.log("Hello via Bun!");
 
 client.login(config.token);
+
+function logger(message: Message<true>, type: "create" | "edit" | "delete") {
+	const time = `${message.createdAt.toISOString()} <t:${message.createdAt.valueOf().toString().slice(0, -3)}>`;
+	const author = `${message.author.tag}${message.author.bot ? " [bot]" : ""} <@${message.author.id}>`;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const guild = `${message.guildId === config.homeserver ? "" : message.guild.name}`;
+	const channel = `${message.channel.name}`;
+	const [firstcontent, ...content] = message.content.split("\n");
+	const showContent = [
+		`| time:   ${time} `,
+		`| author: ${author} `,
+		`| content: ${firstcontent} `,
+		...content.map((i) => `|          ${i} `),
+		`| channel:${channel}`,
+	] as const;
+	const linewidth = Math.max(...showContent.map((item) => stringWidth(item)));
+	if (linewidth > process.stdout.columns) {
+		// 後でなんとかする
+	}
+	console.log(`┌${"─".repeat(linewidth - 1)}┐`);
+	showContent.map((i) => padEnd(i, linewidth, " ") + "|").forEach((item) => console.log(item));
+	console.log(`└${"─".repeat(linewidth - 1)}┘`);
+}
+
+function padEnd(str: string, targetWidth: number, padChar = " ") {
+	const currentWidth = stringWidth(str);
+
+	if (currentWidth >= targetWidth) {
+		return str;
+	}
+
+	const paddingLength = targetWidth - currentWidth;
+	const padding = padChar.repeat(paddingLength);
+
+	return str + padding;
+}
