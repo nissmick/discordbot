@@ -2,3 +2,4 @@
 bun init.ts
 bunx prisma migrate dev --name init
 bun init.ts
+mkdir log

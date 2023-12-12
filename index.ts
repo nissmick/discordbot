@@ -11,6 +11,7 @@ import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 import stringWidth from "string-width";
+import * as fs from "node:fs";
 const rest = new REST().setToken(config.token);
 const commands = [
 	greeting.command,
@@ -35,7 +36,7 @@ const editedStore: {
 		| undefined;
 } = {};
 client.on(Events.MessageCreate, async (message) => {
-	logger(message, "create");
+	if (message.inGuild()) logger(message, "create");
 });
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	if (newMessage.author?.id === config.client_id) return;
@@ -156,7 +157,7 @@ function logger(message: Message<true>, type: "create" | "edit" | "delete") {
 	const author = `${message.author.tag}${message.author.bot ? " [bot]" : ""} <@${message.author.id}>`;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const guild = `${message.guildId === config.homeserver ? "" : message.guild.name}`;
-	const channel = `${message.channel.name}`;
+	const channel = `${message.channel.name} <#${message.channelId}>`;
 	const [firstcontent, ...content] = message.content.split("\n");
 	const showContent = [
 		`| time:   ${time} `,
@@ -164,14 +165,14 @@ function logger(message: Message<true>, type: "create" | "edit" | "delete") {
 		`| content: ${firstcontent} `,
 		...content.map((i) => `|          ${i} `),
 		`| channel:${channel}`,
-	] as const;
+	].map(sanitize);
 	const linewidth = Math.max(...showContent.map((item) => stringWidth(item)));
 	if (linewidth > process.stdout.columns) {
 		// 後でなんとかする
 	}
-	console.log(`┌${"─".repeat(linewidth - 1)}┐`);
-	showContent.map((i) => padEnd(i, linewidth, " ") + "|").forEach((item) => console.log(item));
-	console.log(`└${"─".repeat(linewidth - 1)}┘`);
+	log(`┌${"─".repeat(linewidth - 1)}┐`);
+	showContent.map((i) => padEnd(i, linewidth, " ") + "|").forEach((item) => log(item));
+	log(`└${"─".repeat(linewidth - 1)}┘`);
 }
 
 function padEnd(str: string, targetWidth: number, padChar = " ") {
@@ -185,4 +186,13 @@ function padEnd(str: string, targetWidth: number, padChar = " ") {
 	const padding = padChar.repeat(paddingLength);
 
 	return str + padding;
+}
+function log(text: string) {
+	console.log(text);
+	fs.appendFileSync("./log/log.txt", text + "\n");
+}
+
+function sanitize(text: string) {
+	// eslint-disable-next-line no-control-regex
+	return text.replace(/\x1B/g, "\\e");
 }
