@@ -18,6 +18,7 @@ model User {
     LoginBonus           LoginBonus? @relation(fields: [loginBonusId], references: [id])
     loginBonusId         Int?
     emoji_default_server String      @default("misskey.io")
+    isBot                Boolean
 }
 
 model LoginBonus {

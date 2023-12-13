@@ -132,9 +132,12 @@ client.once(Events.ClientReady, async (readyClient) => {
 					LoginBonus: {
 						create: {},
 					},
+					isBot: member.user.bot,
 				},
 				update: {
 					screen_name: member.displayName,
+					discord_username: member.user.tag,
+					isBot: member.user.bot,
 				},
 			});
 			const resolver = new EmojiResolver(userdata.emoji_default_server, "misskey.io", "misskey.04.si");
@@ -192,7 +195,7 @@ function log(text: string) {
 	fs.appendFileSync("./log/log.txt", text + "\n");
 }
 
-function sanitize(text: string) {
+function sanitize(txt: string) {
 	// eslint-disable-next-line no-control-regex
-	return text.replace(/\x1B/g, "\\e");
+	return txt.replace(/\x1B/g, "\\e");
 }
