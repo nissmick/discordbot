@@ -10,8 +10,8 @@ import * as exec from "./commands/exec";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
-import stringWidth from "string-width";
 import * as fs from "node:fs";
+import { LogtextBuilder } from "./logtext_builder";
 const rest = new REST().setToken(config.token);
 const commands = [
 	greeting.command,
@@ -161,41 +161,12 @@ function logger(message: Message<true>, type: "create" | "edit" | "delete") {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const guild = `${message.guildId === config.homeserver ? "" : message.guild.name}`;
 	const channel = `${message.channel.name} <#${message.channelId}>`;
-	const [firstcontent, ...content] = message.content.split("\n");
-	const showContent = [
-		`| time:   ${time} `,
-		`| author: ${author} `,
-		`| content: ${firstcontent} `,
-		...content.map((i) => `|          ${i} `),
-		`| channel:${channel}`,
-	].map(sanitize);
-	const linewidth = Math.max(...showContent.map((item) => stringWidth(item)));
-	if (linewidth > process.stdout.columns) {
-		// 後でなんとかする
-	}
-	log(`┌${"─".repeat(linewidth - 1)}┐`);
-	showContent.map((i) => padEnd(i, linewidth, " ") + "|").forEach((item) => log(item));
-	log(`└${"─".repeat(linewidth - 1)}┘`);
-}
-
-function padEnd(str: string, targetWidth: number, padChar = " ") {
-	const currentWidth = stringWidth(str);
-
-	if (currentWidth >= targetWidth) {
-		return str;
-	}
-
-	const paddingLength = targetWidth - currentWidth;
-	const padding = padChar.repeat(paddingLength);
-
-	return str + padding;
+	const content = message.content;
+	const logtext = new LogtextBuilder({ sanitize: true });
+	logtext.setItem("time", time).setItem("author", author).setItem("content", content).setItem("channel", channel);
+	log(logtext.toString());
 }
 function log(text: string) {
 	console.log(text);
 	fs.appendFileSync("./log/log.txt", text + "\n");
-}
-
-function sanitize(txt: string) {
-	// eslint-disable-next-line no-control-regex
-	return txt.replace(/\x1B/g, "\\e");
 }
