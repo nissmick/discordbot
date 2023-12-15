@@ -20,7 +20,7 @@ async function fetchEmojiWithCache(url: `https://${string}/api/emojis`, cache: b
 		// console.log("use cache");
 		return cached.data;
 	} else {
-		console.log("fetching");
+		console.log(`fetching to ${url}`);
 		const res = await fetch(url);
 		const json = (await res.json()) as { emojis: emoji[] };
 		const data = json.emojis;
@@ -108,5 +108,23 @@ export class EmojiResolver {
 			}
 		}
 		return null;
+	}
+	query(partial_match: string[]): Map<string, emoji[]>;
+	query(match: RegExp): Map<string, emoji[]>;
+	query(partial_match: string[] | RegExp): Map<string, emoji[]> {
+		let match: RegExp;
+		if (partial_match instanceof RegExp) {
+			match = partial_match;
+		} else {
+			match = new RegExp(partial_match.join(".*?"));
+		}
+		const path = this.PATH.keys();
+		const result: Map<string, emoji[]> = new Map();
+		for (const domain of path) {
+			const provider = this.repository.get(domain)!;
+			const filted = [...provider.map.values()].filter((emoji) => match.test(emoji.name));
+			result.set(domain, [...filted]);
+		}
+		return result;
 	}
 }
