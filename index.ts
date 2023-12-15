@@ -7,6 +7,7 @@ import * as ranking from "./commands/ranking";
 import * as zandaka from "./commands/zandaka";
 import * as misskey_emoji from "./commands/misskey-emoji";
 import * as exec from "./commands/exec";
+import * as emoji_search from "./commands/emoji_search";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
@@ -20,6 +21,7 @@ const commands = [
 	zandaka.command,
 	misskey_emoji.command,
 	exec.command,
+	emoji_search.command,
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
@@ -103,6 +105,10 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case Commands.exec:
 			exec.execute(...arg);
+			break;
+		case Commands.emoji_search:
+			emoji_search.execute(...arg);
+			break;
 	}
 }
 
