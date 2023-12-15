@@ -3,10 +3,10 @@ import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 import config from "../config.json";
 import { client } from "../store";
-const enum Option {
-	code = "code",
-	show = "show",
-}
+const Option = {
+	code: "code",
+	show: "show",
+} as const;
 
 const AsyncFunction = async function () {}.constructor as new (...args: string[]) => (
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

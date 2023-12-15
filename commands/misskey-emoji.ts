@@ -2,10 +2,10 @@ import { SlashCommandBuilder } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 
-const enum Options {
-	emoji_name = "emoji_name",
-	server_name = "server_name",
-}
+const Options = {
+	emoji_name: "emoji_name",
+	server_name: "server_name",
+} as const;
 
 export const command = new SlashCommandBuilder()
 	.setName(Commands.misskey_emoji)
