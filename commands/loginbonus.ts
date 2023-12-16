@@ -5,7 +5,7 @@ import { CommandHandler } from "../typeing";
 
 export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
 export const execute: CommandHandler = async (interaction, user) => {
-	const replied = await interaction.reply("処理中...");
+	const replied = await interaction.deferReply();
 	const now = new Date();
 	let LoginBonus = user.LoginBonus;
 	if (!LoginBonus) {

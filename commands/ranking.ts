@@ -15,7 +15,9 @@ export const command = new SlashCommandBuilder()
 			.setMinValue(1);
 	});
 export const execute: CommandHandler = async (interaction) => {
-	const replied = await interaction.reply({ content: "処理中..." /*, ephemeral: true*/ });
+	const replied = await interaction.deferReply({
+		/*, ephemeral: true*/
+	});
 	const min_login = interaction.options.getNumber("min_login")!;
 	const embed = new EmbedBuilder().setTitle("Ranking");
 	const matcheduser = await prisma.user.findMany({
