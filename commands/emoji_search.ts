@@ -1,5 +1,5 @@
 import { AttachmentBuilder, SlashCommandBuilder } from "discord.js";
-import { Buffer } from "node:buffer"
+import { Buffer } from "node:buffer";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 const Options = {
@@ -12,31 +12,42 @@ export const command = new SlashCommandBuilder()
 	.addStringOption((o) => o.setName(Options.query).setDescription("検索のクエリ").setRequired(true));
 export const execute: CommandHandler = async (interaction, user) => {
 	const query = interaction.options.getString(Options.query, true);
-	const regexMeta = new RegExp("[" + "[]{}()*+?^-.\\".split("").map(i => "\\" + i).join("") + "]");
-	let regex:RegExp;
+	const regexMeta = new RegExp(
+		"[" +
+			"[]{}()*+?^-.\\"
+				.split("")
+				.map((i) => "\\" + i)
+				.join("") +
+			"]"
+	);
+	let regex: RegExp;
 	try {
 		regex = new RegExp(
-			"^" + query
-				.replace(regexMeta, "\\$1")
-				.split(" ")
-				.map((item) => "(?=.*" + item + ")")
-				.join("") + ".*$",
+			"^" +
+				query
+					.replace(regexMeta, "\\$1")
+					.split(" ")
+					.map((item) => "(?=.*" + item + ")")
+					.join("") +
+				".*$",
 			"g"
 		);
 	} catch (e) {
 		return interaction.reply({
 			content: "RegExp Error...",
-			ephemeral: true
+			ephemeral: true,
 		});
 	}
 	await interaction.deferReply();
 
 	const resultRegExp = new RegExp(
-		"(" + query
-			.replace(regexMeta, "\\$1")
-			.split(" ")
-			.map((item) => "(" + item + ")")
-			.join("|") + ")",
+		"(" +
+			query
+				.replace(regexMeta, "\\$1")
+				.split(" ")
+				.map((item) => "(" + item + ")")
+				.join("|") +
+			")",
 		"g"
 	);
 	console.log(regex);
@@ -46,18 +57,16 @@ export const execute: CommandHandler = async (interaction, user) => {
 		showText.push(`----${key}----`);
 		value.forEach((emoji) =>
 			showText.push(
-				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$1[0m")} aliases: [${emoji.aliases
-					.join(", ")}] category: ${emoji.category}`
+				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$1[0m")} aliases: [${emoji.aliases.join(", ")}] category: ${
+					emoji.category
+				}`
 			)
 		);
 	}
 	console.log(emojis);
 	console.log(showText);
 	interaction.editReply({
-		files: [
-			new AttachmentBuilder(Buffer.from(showText.join("\n")), { name: "result.ansi" })
-		]
+		files: [new AttachmentBuilder(Buffer.from(showText.join("\n")), { name: "result.ansi" })],
 	});
 	console.log(regex);
-
 };
