@@ -22,7 +22,7 @@ export const execute: CommandHandler = async (interaction, user) => {
 			"g"
 		);
 	}catch(e){
-		return interaction.reply("RegExp Error...");
+		return interaction.editReply("RegExp Error...");
 	}
 	const regex = new RegExp(
 		query
