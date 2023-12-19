@@ -5,7 +5,7 @@ import type { CommandHandler } from "../typeing";
 const Options = {
 	query: "query",
 } as const;
-
+const Ansi = { red: "[1;3;31m", reset: "[0m" } as const;
 export const command = new SlashCommandBuilder()
 	.setName(Commands.emoji_search)
 	.setDescription("絵文字を検索する")
@@ -50,23 +50,19 @@ export const execute: CommandHandler = async (interaction, user) => {
 			")",
 		"g"
 	);
-	console.log(regex);
 	const emojis = user.emojiResolver.query(regex);
 	const showText: string[] = [];
 	for (const [key, value] of emojis) {
 		showText.push(`----${key}----`);
 		value.forEach((emoji) =>
 			showText.push(
-				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$1[0m")} aliases: [${emoji.aliases.join(", ")}] category: ${
-					emoji.category
-				}`
+				`name: ${emoji.name.replace(resultRegExp, `${Ansi.red}$1${Ansi.reset}`)} aliases: [${emoji.aliases.join(
+					", "
+				)}] category: ${emoji.category}`
 			)
 		);
 	}
-	console.log(emojis);
-	console.log(showText);
-	interaction.editReply({
+	await interaction.editReply({
 		files: [new AttachmentBuilder(Buffer.from(showText.join("\n")), { name: "result.ansi" })],
 	});
-	console.log(regex);
 };
