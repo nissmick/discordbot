@@ -54,9 +54,8 @@ export const execute: CommandHandler = async (interaction, user) => {
 		showText.push(`----${key}----`);
 		value.forEach((emoji) =>
 			showText.push(
-				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$&[0m")} aliases: [${emoji.aliases
-					.join(", ")
-					.replaceAll("_", "_")}] category: ${emoji.category}`
+				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$1[0m")} aliases: [${emoji.aliases
+					.join(", ")}] category: ${emoji.category}`
 			)
 		);
 	}
