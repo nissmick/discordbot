@@ -11,7 +11,7 @@ export const command = new SlashCommandBuilder()
 	.setDescription("絵文字を検索する")
 	.addStringOption((o) => o.setName(Options.query).setDescription("検索のクエリ").setRequired(true));
 export const execute: CommandHandler = async (interaction, user) => {
-	await interaction.reply("検索中...");
+	// await interaction.reply("検索中...");
 	const query = interaction.options.getString(Options.query, true);
 	const regex = new RegExp(
 		query
@@ -35,10 +35,10 @@ export const execute: CommandHandler = async (interaction, user) => {
 	}
 	console.log(emojis);
 	console.log(showText);
-	interaction.editReply({
-		content: "検索完了"// /*"```\n" + */ showText.join("\n").slice(0, 1990) /* + "```",*/,
-	});
-	interaction.followUp({
+	// interaction.editReply({
+	// 	content: "検索完了"// /*"```\n" + */ showText.join("\n").slice(0, 1990) /* + "```",*/,
+	// });
+	interaction.reply({
 		files: [
 			new AttachmentBuilder(Buffer.from(showText.join("\n")), { name: "result.ansi" })
 		]
