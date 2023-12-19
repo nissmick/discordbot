@@ -11,24 +11,40 @@ export const command = new SlashCommandBuilder()
 	.setDescription("絵文字を検索する")
 	.addStringOption((o) => o.setName(Options.query).setDescription("検索のクエリ").setRequired(true));
 export const execute: CommandHandler = async (interaction, user) => {
-	await interaction.deferReply();
 	const query = interaction.options.getString(Options.query, true);
-	try{
+	const regexMeta = new RegExp("[" + "[]{}()*+?^-.\\".split("").map(i => "\\" + i).join("") + "]");
+
+	try {
 		new RegExp(
 			query
+				.replace(regexMeta, "\\$&")
 				.split(" ")
 				.map((item) => "(" + item + ")")
 				.join(".*?"),
 			"g"
 		);
-	}catch(e){
-		return interaction.editReply("RegExp Error...");
+	} catch (e) {
+		return interaction.reply({
+			content: "RegExp Error...",
+			ephemeral: true
+		});
 	}
+	await interaction.deferReply();
+
 	const regex = new RegExp(
-		query
+		"^" + query
+			.replace(regexMeta, "\\$1")
+			.split(" ")
+			.map((item) => "(?=.*" + item + ")")
+			.join("") + ".*$",
+		"g"
+	);
+	const resultRegExp = new RegExp(
+		"(" + query
+			.replace(regexMeta, "\\$1")
 			.split(" ")
 			.map((item) => "(" + item + ")")
-			.join(".*?"),
+			.join("|") + ")",
 		"g"
 	);
 	console.log(regex);
@@ -38,9 +54,9 @@ export const execute: CommandHandler = async (interaction, user) => {
 		showText.push(`----${key}----`);
 		value.forEach((emoji) =>
 			showText.push(
-				`name: ${emoji.name.replace(regex, "[1;3;31m$1[0m")} aliases: [${emoji.aliases
+				`name: ${emoji.name.replace(resultRegExp, "[1;3;31m$&[0m")} aliases: [${emoji.aliases
 					.join(", ")
-					.replaceAll("_", "\\_")}] category: ${emoji.category}`
+					.replaceAll("_", "_")}] category: ${emoji.category}`
 			)
 		);
 	}
@@ -51,4 +67,6 @@ export const execute: CommandHandler = async (interaction, user) => {
 			new AttachmentBuilder(Buffer.from(showText.join("\n")), { name: "result.ansi" })
 		]
 	});
+	console.log(regex);
+
 };
