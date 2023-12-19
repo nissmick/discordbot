@@ -13,14 +13,14 @@ export const command = new SlashCommandBuilder()
 export const execute: CommandHandler = async (interaction, user) => {
 	const query = interaction.options.getString(Options.query, true);
 	const regexMeta = new RegExp("[" + "[]{}()*+?^-.\\".split("").map(i => "\\" + i).join("") + "]");
-
+	let regex:RegExp;
 	try {
-		new RegExp(
-			query
-				.replace(regexMeta, "\\$&")
+		regex = new RegExp(
+			"^" + query
+				.replace(regexMeta, "\\$1")
 				.split(" ")
-				.map((item) => "(" + item + ")")
-				.join(".*?"),
+				.map((item) => "(?=.*" + item + ")")
+				.join("") + ".*$",
 			"g"
 		);
 	} catch (e) {
@@ -31,14 +31,6 @@ export const execute: CommandHandler = async (interaction, user) => {
 	}
 	await interaction.deferReply();
 
-	const regex = new RegExp(
-		"^" + query
-			.replace(regexMeta, "\\$1")
-			.split(" ")
-			.map((item) => "(?=.*" + item + ")")
-			.join("") + ".*$",
-		"g"
-	);
 	const resultRegExp = new RegExp(
 		"(" + query
 			.replace(regexMeta, "\\$1")
