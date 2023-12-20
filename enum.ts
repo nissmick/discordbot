@@ -6,4 +6,5 @@ export const Commands = {
 	misskey_emoji: "misskey_emoji",
 	exec: "exec",
 	emoji_search: "emoji_search",
+	askai: "askai",
 } as const;
