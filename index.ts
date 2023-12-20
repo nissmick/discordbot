@@ -176,7 +176,7 @@ function logger(message: Message<true>, type: "create" | "edit" | "delete") {
 	logtext.setItem("time", time).setItem("author", author).setItem("content", content).setItem("channel", channel);
 	log(logtext.toString());
 }
-function log(text: string) {
+export function log(text: string) {
 	console.log(text);
 	fs.appendFileSync("./log/log.txt", text + "\n");
 }
