@@ -165,7 +165,8 @@ console.log("Hello via Bun!");
 
 client.login(config.token);
 
-function logger(message: Message<true>, type: "create" | "edit" | "delete") {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function logger(message: Message<true>, _type: "create" | "edit" | "delete") {
 	const time = `${message.createdAt.toISOString()} <t:${message.createdAt.valueOf().toString().slice(0, -3)}>`;
 	const author = `${message.author.tag}${message.author.bot ? " [bot]" : ""} <@${message.author.id}>`;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
