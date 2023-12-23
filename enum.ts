@@ -7,4 +7,5 @@ export const Commands = {
 	exec: "exec",
 	emoji_search: "emoji_search",
 	askai: "askai",
+	youyaku: "youyaku",
 } as const;

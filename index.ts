@@ -9,6 +9,7 @@ import * as misskey_emoji from "./commands/misskey-emoji";
 import * as exec from "./commands/exec";
 import * as emoji_search from "./commands/emoji_search";
 import * as askai from "./commands/askai";
+import * as youyaku from "./commands/youyaku";
 import { Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
@@ -24,6 +25,7 @@ const commands = [
 	exec.command,
 	emoji_search.command,
 	askai.command,
+	youyaku.command,
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
@@ -113,6 +115,10 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case Commands.askai:
 			askai.execute(...arg);
+			break;
+		case Commands.youyaku:
+			youyaku.execute(...arg);
+			break;
 	}
 }
 
