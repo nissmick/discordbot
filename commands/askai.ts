@@ -5,7 +5,7 @@ import config from "../config.json";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { log } from "..";
 const genAI = new GoogleGenerativeAI(config["gemini-api-key"]);
-const model = genAI.getGenerativeModel({ model: "gemini-pro", generationConfig: { maxOutputTokens: 2000 } });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 const Options = {
 	content: "content",
