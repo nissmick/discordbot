@@ -9,3 +9,7 @@ export const Commands = {
 	askai: "askai",
 	youyaku: "youyaku",
 } as const;
+
+export const Channels = {
+	automod_detector: "1188126321218429129",
+} as const;

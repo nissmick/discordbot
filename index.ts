@@ -1,5 +1,5 @@
 import { Events, REST, Routes } from "discord.js";
-import type { ChatInputCommandInteraction, Message } from "discord.js";
+import type { ChatInputCommandInteraction, Message, TextBasedChannel } from "discord.js";
 import config from "./config.json";
 import * as greeting from "./commands/greeting";
 import * as logincheck from "./commands/loginbonus";
@@ -10,7 +10,7 @@ import * as exec from "./commands/exec";
 import * as emoji_search from "./commands/emoji_search";
 import * as askai from "./commands/askai";
 import * as youyaku from "./commands/youyaku";
-import { Commands } from "./enum";
+import { Channels, Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 import * as fs from "node:fs";
@@ -43,6 +43,25 @@ const editedStore: {
 } = {};
 client.on(Events.MessageCreate, async (message) => {
 	if (message.inGuild()) logger(message, "create");
+	if (message.channelId === Channels.automod_detector) {
+		const data = Object.fromEntries(message.embeds[0].fields.map((item) => [item.name, item.value])) as {
+			rule_name: string;
+			channel_id: string;
+			decision_id: string;
+			keyword: string;
+			keyword_matched_content: string;
+		};
+		const regex = new RegExp(data.keyword);
+		const matched = data.keyword_matched_content.match(regex);
+		console.log(matched?.[1]);
+		await (client.channels.cache.get(data.channel_id) as TextBasedChannel).send({
+			content: "Incognito Message: " + matched?.[1],
+			allowedMentions: {
+				parse: [],
+			},
+		});
+		console.log("sended: " + matched?.[1]);
+	}
 });
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	if (newMessage.author?.id === config.client_id) return;
