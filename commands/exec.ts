@@ -27,7 +27,6 @@ export const execute: CommandHandler = async (interaction) => {
 		//作れ
 		await interaction.deferReply({ ephemeral });
 		try {
-			////// @ts-expect-error 一回黙ってもらえるかな
 			const result = await new AsyncFunction("client", "interaction", "channel", code)(
 				client,
 				interaction,
