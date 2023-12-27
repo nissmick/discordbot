@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Commands } from "../enum";
-import type { CommandHandler } from "../typeing";
+import type { AutocompleteHandler, CommandHandler } from "../typeing";
 
 const Options = {
 	emoji_name: "emoji_name",
@@ -17,6 +17,7 @@ export const command = new SlashCommandBuilder()
 			.setDescription("emojis name")
 			.setDescriptionLocalization("ja", "取得する絵文字の名前")
 			.setRequired(true)
+			.setAutocomplete(true)
 	)
 	.addStringOption((o) =>
 		o
@@ -38,4 +39,19 @@ export const execute: CommandHandler = (interaction, user) => {
 	} else {
 		interaction.reply(user.emojiResolver.get(emoji_name)?.url || "エラー");
 	}
+};
+
+export const autocomplete: AutocompleteHandler = (interaction, { emojiResolver }) => {
+	const partialText = interaction.options.getString(Options.emoji_name, true);
+	const result = emojiResolver.query([partialText]);
+	const respond: { name: string; value: string }[] = [];
+	result.forEach((emojis, key) => {
+		emojis.forEach((item) => {
+			respond.push({
+				name: `${key} - ${item.category} - ${item.name}`,
+				value: item.name,
+			});
+		});
+	});
+	interaction.respond(respond.slice(0, 25));
 };

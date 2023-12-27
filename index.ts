@@ -8,11 +8,18 @@ import {
 	TextInputBuilder,
 	TextInputStyle,
 } from "discord.js";
-import type { ChatInputCommandInteraction, Message, ModalSubmitInteraction, TextBasedChannel } from "discord.js";
+import type {
+	AutocompleteInteraction,
+	CacheType,
+	ChatInputCommandInteraction,
+	Message,
+	ModalSubmitInteraction,
+	TextBasedChannel,
+} from "discord.js";
 import config from "./config.json";
 import { greeting, logincheck, ranking, zandaka, misskey_emoji, exec, emoji_search, askai, youyaku } from "./commands";
 import { Channels, Commands } from "./enum";
-import { client, geminiProModel, prisma } from "./store";
+import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 import * as fs from "node:fs";
 import { LogtextBuilder } from "./logtext_builder";
@@ -35,9 +42,19 @@ client.on(Events.InteractionCreate, (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
 	if (interaction.isButton()) buttonHandler(interaction);
 	if (interaction.isModalSubmit()) modalHandler(interaction);
+	if (interaction.isAutocomplete()) autoCompleteHandler(interaction);
 	// if (interaction.isButton()) buttonHandler(interaction);
 	//	console.log(interaction);
 });
+async function autoCompleteHandler(interaction: AutocompleteInteraction<CacheType>) {
+	switch (interaction.commandName) {
+		case Commands.misskey_emoji:
+			misskey_emoji.autocomplete(interaction, {
+				emojiResolver: emojiResolvers.get(BigInt(interaction.user.id))!,
+			});
+			break;
+	}
+}
 
 async function modalHandler(interaction: ModalSubmitInteraction) {
 	const id = interaction.customId.slice("continue-".length);

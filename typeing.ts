@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.js";
+import type { AutocompleteInteraction, ChatInputCommandInteraction } from "discord.js";
 import type { EmojiResolver } from "./emoji_store";
 type UserData = {
 	LoginBonus: {
@@ -17,5 +17,6 @@ type UserData = {
 	emojiResolver: EmojiResolver;
 };
 type CommandHandler = (interaction: ChatInputCommandInteraction, user: UserData) => void;
+type AutocompleteHandler = (interaction: AutocompleteInteraction, data: { emojiResolver: EmojiResolver }) => void;
 
-export type { CommandHandler };
+export type { CommandHandler, AutocompleteHandler };
