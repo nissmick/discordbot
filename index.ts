@@ -1,21 +1,24 @@
-import { Events, REST, Routes } from "discord.js";
-import type { ChatInputCommandInteraction, Message, TextBasedChannel } from "discord.js";
+import {
+	ActionRowBuilder,
+	ButtonInteraction,
+	Events,
+	ModalBuilder,
+	REST,
+	Routes,
+	TextInputBuilder,
+	TextInputStyle,
+} from "discord.js";
+import type { ChatInputCommandInteraction, Message, ModalSubmitInteraction, TextBasedChannel } from "discord.js";
 import config from "./config.json";
-import * as greeting from "./commands/greeting";
-import * as logincheck from "./commands/loginbonus";
-import * as ranking from "./commands/ranking";
-import * as zandaka from "./commands/zandaka";
-import * as misskey_emoji from "./commands/misskey-emoji";
-import * as exec from "./commands/exec";
-import * as emoji_search from "./commands/emoji_search";
-import * as askai from "./commands/askai";
-import * as youyaku from "./commands/youyaku";
+import { greeting, logincheck, ranking, zandaka, misskey_emoji, exec, emoji_search, askai, youyaku } from "./commands";
 import { Channels, Commands } from "./enum";
-import { client, prisma } from "./store";
+import { client, geminiProModel, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 import * as fs from "node:fs";
 import { LogtextBuilder } from "./logtext_builder";
+import { genAIHandler } from "./commands/askai";
 const rest = new REST().setToken(config.token);
+
 const commands = [
 	greeting.command,
 	logincheck.command,
@@ -30,9 +33,61 @@ const commands = [
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
 	if (interaction.isChatInputCommand()) commandHandler(interaction);
+	if (interaction.isButton()) buttonHandler(interaction);
+	if (interaction.isModalSubmit()) modalHandler(interaction);
 	// if (interaction.isButton()) buttonHandler(interaction);
 	//	console.log(interaction);
 });
+
+async function modalHandler(interaction: ModalSubmitInteraction) {
+	const id = interaction.customId.slice("continue-".length);
+	const prompts = await prisma.prompts.findUnique({
+		where: {
+			id: parseInt(id),
+		},
+		include: {
+			content: true,
+		},
+	});
+	if (!prompts) {
+		await interaction.reply("!!データが見つかりませんでした");
+		return;
+	}
+	const contents = prompts.content.map((item) => {
+		return {
+			role: item.isUser ? "user" : "model",
+			parts: [
+				{
+					text: item.content,
+				},
+			],
+		};
+	});
+	await genAIHandler(interaction, interaction.fields.getTextInputValue("content"), {
+		contents: [
+			...contents,
+			{
+				role: "user",
+				parts: [{ text: interaction.fields.getTextInputValue("content") }],
+			},
+		],
+	});
+}
+
+async function buttonHandler(interaction: ButtonInteraction) {
+	if (interaction.customId.startsWith("continue-")) {
+		const input = new TextInputBuilder()
+			.setCustomId("content")
+			.setLabel("追加で聞く内容")
+			.setStyle(TextInputStyle.Paragraph);
+		const modal = new ModalBuilder()
+			.setTitle("追加で聞く内容")
+			.setCustomId(interaction.customId)
+			.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+
+		await interaction.showModal(modal);
+	}
+}
 const editedStore: {
 	[x: string]:
 		| {

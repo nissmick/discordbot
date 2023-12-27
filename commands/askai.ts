@@ -1,11 +1,16 @@
-import { type Message, SlashCommandBuilder } from "discord.js";
+import {
+	type Message,
+	SlashCommandBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	ActionRowBuilder,
+	CommandInteraction,
+	ModalSubmitInteraction,
+} from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
-import config from "../config.json";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { log } from "..";
-const genAI = new GoogleGenerativeAI(config["gemini-api-key"]);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+import { prisma, geminiProModel } from "../store";
 
 const Options = {
 	content: "content",
@@ -16,13 +21,25 @@ export const command = new SlashCommandBuilder()
 	.addStringOption((o) => o.setName(Options.content).setDescription("質問する内容").setRequired(true))
 	.setDMPermission(false);
 export const execute: CommandHandler = async (interaction) => {
-	const replied = await interaction.deferReply(/*{ ephemeral: true }*/);
 	const content = interaction.options.getString(Options.content, true);
-	log("[ Gemini Pro ] 質問: " + content);
-	let fulltext = "質問: " + content + "\n\n";
+	genAIHandler(interaction, content, content);
+};
+
+function byteLengthOf(s: string) {
+	return Buffer.byteLength(s);
+}
+
+export async function genAIHandler(
+	interaction: CommandInteraction | ModalSubmitInteraction,
+	contentText: string,
+	content: Parameters<typeof geminiProModel.generateContentStream>[0]
+) {
+	const replied = await interaction.deferReply(/*{ ephemeral: true }*/);
+	log("[ Gemini Pro ] 質問: " + contentText);
+	let fulltext = "質問: " + contentText + "\n\n";
 	const texts: { text: string; replied: Message<boolean> }[] = [];
 	try {
-		const result = await model.generateContentStream([content]);
+		const result = await geminiProModel.generateContentStream(content);
 		interaction.editReply({
 			content:
 				"<a:loading:1186939837073326151> 出力中...\n AIの解答は不正確な情報（人物に関する情報など）を表示することがあるため、生成された回答を再確認するようにしてください。",
@@ -48,9 +65,7 @@ export const execute: CommandHandler = async (interaction) => {
 					const text = fulltext.slice(index * 1800);
 					texts[index] = {
 						text,
-						replied: await (
-							await replied.fetch()
-						).reply({
+						replied: await (index === 1 ? await replied.fetch() : texts[index - 1].replied).reply({
 							content: "<a:loading:1186939837073326151> 出力中...\n" + text,
 							allowedMentions: {
 								parse: [],
@@ -82,6 +97,29 @@ export const execute: CommandHandler = async (interaction) => {
 			}
 		}
 		log("[ Gemini Pro ] AIの解答:" + fulltext);
+		const prompts = await prisma.prompts.create({
+			data: {
+				authorId: BigInt(interaction.user.id),
+				content: {
+					create: {
+						content: contentText,
+						isUser: true,
+					},
+				},
+			},
+		});
+		await prisma.prompt.create({
+			data: {
+				promptsId: prompts.id,
+				content: fulltext,
+				isUser: false,
+			},
+		});
+		const continuebutton = new ButtonBuilder()
+			.setCustomId(`continue-${prompts.id}`)
+			.setLabel("続けて質問する")
+			.setStyle(ButtonStyle.Primary);
+		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(continuebutton);
 		if (fulltext.length > 1800) {
 			const last = texts.at(-1)!;
 			last.replied.edit({
@@ -91,6 +129,7 @@ export const execute: CommandHandler = async (interaction) => {
 				allowedMentions: {
 					parse: [],
 				},
+				components: [row],
 			});
 		} else {
 			interaction.editReply({
@@ -100,6 +139,7 @@ export const execute: CommandHandler = async (interaction) => {
 				allowedMentions: {
 					parse: [],
 				},
+				components: [row],
 			});
 		}
 	} catch (error) {
@@ -108,8 +148,4 @@ export const execute: CommandHandler = async (interaction) => {
 			console.error(error);
 		}
 	}
-};
-
-function byteLengthOf(s: string) {
-	return Buffer.byteLength(s);
 }
