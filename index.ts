@@ -80,15 +80,20 @@ async function modalHandler(interaction: ModalSubmitInteraction) {
 			],
 		};
 	});
-	await genAIHandler(interaction, interaction.fields.getTextInputValue("content"), {
-		contents: [
-			...contents,
-			{
-				role: "user",
-				parts: [{ text: interaction.fields.getTextInputValue("content") }],
-			},
-		],
-	});
+	await genAIHandler(
+		interaction,
+		interaction.fields.getTextInputValue("content"),
+		{
+			contents: [
+				...contents,
+				{
+					role: "user",
+					parts: [{ text: interaction.fields.getTextInputValue("content") }],
+				},
+			],
+		},
+		prompts.id
+	);
 }
 
 async function buttonHandler(interaction: ButtonInteraction) {

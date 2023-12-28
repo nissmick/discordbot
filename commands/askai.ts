@@ -32,11 +32,13 @@ function byteLengthOf(s: string) {
 export async function genAIHandler(
 	interaction: CommandInteraction | ModalSubmitInteraction,
 	contentText: string,
-	content: Parameters<typeof geminiProModel.generateContentStream>[0]
+	content: Parameters<typeof geminiProModel.generateContentStream>[0],
+	parentPromptId?: number
 ) {
 	const replied = await interaction.deferReply(/*{ ephemeral: true }*/);
 	log("[ Gemini Pro ] 質問: " + contentText);
 	let fulltext = "質問: " + contentText + "\n\n";
+	let output = "";
 	const texts: { text: string; replied: Message<boolean> }[] = [];
 	try {
 		const result = await geminiProModel.generateContentStream(content);
@@ -48,6 +50,7 @@ export async function genAIHandler(
 			},
 		});
 		for await (const chunk of result.stream) {
+			output += chunk.text();
 			fulltext += chunk.text();
 			const index = Math.floor(fulltext.length / 1800);
 			const column = texts.at(index);
@@ -97,21 +100,27 @@ export async function genAIHandler(
 			}
 		}
 		log("[ Gemini Pro ] AIの解答:" + fulltext);
-		const prompts = await prisma.prompts.create({
-			data: {
-				authorId: BigInt(interaction.user.id),
-				content: {
-					create: {
-						content: contentText,
-						isUser: true,
-					},
+		let prompts: { id: number };
+		if (parentPromptId) {
+			prompts = { id: parentPromptId };
+		} else {
+			prompts = await prisma.prompts.create({
+				data: {
+					authorId: BigInt(interaction.user.id),
 				},
+			});
+		}
+		await prisma.prompt.create({
+			data: {
+				promptsId: prompts.id,
+				content: contentText,
+				isUser: true,
 			},
 		});
 		await prisma.prompt.create({
 			data: {
 				promptsId: prompts.id,
-				content: fulltext,
+				content: output,
 				isUser: false,
 			},
 		});
