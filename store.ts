@@ -5,7 +5,9 @@ import config from "./config.json";
 export const genAI = new GoogleGenerativeAI(config["gemini-api-key"]);
 const geminiProModel = genAI.getGenerativeModel({ model: "gemini-pro" });
 export { geminiProModel };
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient({
+	log: ["info", "warn", "error"],
+});
 
 // Create a new client instance
 export const client = new Client({
