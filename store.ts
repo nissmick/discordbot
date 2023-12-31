@@ -8,7 +8,7 @@ export { geminiProModel };
 export const prisma = new PrismaClient({
 	log: ["info", "warn", "error"],
 });
-
+export { config };
 // Create a new client instance
 export const client = new Client({
 	intents: [

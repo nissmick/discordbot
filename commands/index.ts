@@ -7,3 +7,4 @@ export * as exec from "./exec";
 export * as emoji_search from "./emoji_search";
 export * as askai from "./askai";
 export * as youyaku from "./youyaku";
+export * as collaborative_message from "./collaborative_message";

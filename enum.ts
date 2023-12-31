@@ -8,6 +8,7 @@ export const Commands = {
 	emoji_search: "emoji_search",
 	askai: "askai",
 	youyaku: "youyaku",
+	collaborative_message: "collaborative_message",
 } as const;
 
 export const Channels = {

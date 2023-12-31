@@ -6,6 +6,10 @@ import {
 	ActionRowBuilder,
 	CommandInteraction,
 	ModalSubmitInteraction,
+	ButtonInteraction,
+	ModalBuilder,
+	TextInputBuilder,
+	TextInputStyle,
 } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
@@ -25,11 +29,64 @@ export const execute: CommandHandler = async (interaction) => {
 	genAIHandler(interaction, content, content);
 };
 
+export const buttonHandler = async (interaction: ButtonInteraction) => {
+	const input = new TextInputBuilder()
+		.setCustomId("content")
+		.setLabel("追加で聞く内容")
+		.setStyle(TextInputStyle.Paragraph);
+	const modal = new ModalBuilder()
+		.setTitle("追加で聞く内容")
+		.setCustomId(interaction.customId)
+		.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+
+	await interaction.showModal(modal);
+};
+
+export const modalHandler = async (interaction: ModalSubmitInteraction) => {
+	const id = interaction.customId.slice("continue-".length);
+	const prompts = await prisma.prompts.findUnique({
+		where: {
+			id: parseInt(id),
+		},
+		include: {
+			content: true,
+		},
+	});
+	if (!prompts) {
+		await interaction.reply("!!データが見つかりませんでした");
+		return;
+	}
+	const contents = prompts.content.map((item) => {
+		return {
+			role: item.isUser ? "user" : "model",
+			parts: [
+				{
+					text: item.content,
+				},
+			],
+		};
+	});
+	await genAIHandler(
+		interaction,
+		interaction.fields.getTextInputValue("content"),
+		{
+			contents: [
+				...contents,
+				{
+					role: "user",
+					parts: [{ text: interaction.fields.getTextInputValue("content") }],
+				},
+			],
+		},
+		prompts.id
+	);
+};
+
 function byteLengthOf(s: string) {
 	return Buffer.byteLength(s);
 }
 
-export async function genAIHandler(
+async function genAIHandler(
 	interaction: CommandInteraction | ModalSubmitInteraction,
 	contentText: string,
 	content: Parameters<typeof geminiProModel.generateContentStream>[0],

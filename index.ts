@@ -1,13 +1,4 @@
-import {
-	ActionRowBuilder,
-	ButtonInteraction,
-	Events,
-	ModalBuilder,
-	REST,
-	Routes,
-	TextInputBuilder,
-	TextInputStyle,
-} from "discord.js";
+import { ButtonInteraction, Events, REST, Routes } from "discord.js";
 import type {
 	AutocompleteInteraction,
 	CacheType,
@@ -17,13 +8,23 @@ import type {
 	TextBasedChannel,
 } from "discord.js";
 import config from "./config.json";
-import { greeting, logincheck, ranking, zandaka, misskey_emoji, exec, emoji_search, askai, youyaku } from "./commands";
+import {
+	greeting,
+	logincheck,
+	ranking,
+	zandaka,
+	misskey_emoji,
+	exec,
+	emoji_search,
+	askai,
+	youyaku,
+	collaborative_message,
+} from "./commands";
 import { Channels, Commands } from "./enum";
 import { client, prisma } from "./store";
 import { EmojiResolver } from "./emoji_store";
 import * as fs from "node:fs";
 import { LogtextBuilder } from "./logtext_builder";
-import { genAIHandler } from "./commands/askai";
 const rest = new REST().setToken(config.token);
 
 const commands = [
@@ -36,6 +37,7 @@ const commands = [
 	emoji_search.command,
 	askai.command,
 	youyaku.command,
+	collaborative_message.command,
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, (interaction) => {
@@ -57,57 +59,16 @@ async function autoCompleteHandler(interaction: AutocompleteInteraction<CacheTyp
 }
 
 async function modalHandler(interaction: ModalSubmitInteraction) {
-	const id = interaction.customId.slice("continue-".length);
-	const prompts = await prisma.prompts.findUnique({
-		where: {
-			id: parseInt(id),
-		},
-		include: {
-			content: true,
-		},
-	});
-	if (!prompts) {
-		await interaction.reply("!!データが見つかりませんでした");
-		return;
+	if (interaction.customId.startsWith("continue-")) {
+		askai.modalHandler(interaction);
+	} else if (interaction.customId.startsWith("collaborative-")) {
+		collaborative_message.modalHandler(interaction);
 	}
-	const contents = prompts.content.map((item) => {
-		return {
-			role: item.isUser ? "user" : "model",
-			parts: [
-				{
-					text: item.content,
-				},
-			],
-		};
-	});
-	await genAIHandler(
-		interaction,
-		interaction.fields.getTextInputValue("content"),
-		{
-			contents: [
-				...contents,
-				{
-					role: "user",
-					parts: [{ text: interaction.fields.getTextInputValue("content") }],
-				},
-			],
-		},
-		prompts.id
-	);
 }
 
 async function buttonHandler(interaction: ButtonInteraction) {
 	if (interaction.customId.startsWith("continue-")) {
-		const input = new TextInputBuilder()
-			.setCustomId("content")
-			.setLabel("追加で聞く内容")
-			.setStyle(TextInputStyle.Paragraph);
-		const modal = new ModalBuilder()
-			.setTitle("追加で聞く内容")
-			.setCustomId(interaction.customId)
-			.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
-
-		await interaction.showModal(modal);
+		askai.buttonHandler(interaction);
 	}
 }
 const editedStore: {
@@ -214,6 +175,9 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case Commands.youyaku:
 			youyaku.execute(...arg);
+			break;
+		case Commands.collaborative_message:
+			collaborative_message.execute(...arg);
 			break;
 	}
 }

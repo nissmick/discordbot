@@ -22,7 +22,7 @@ export class TextDecoderStream extends TransformStream<Uint8Array, string> {
 	readonly ignoreBOM: boolean;
 
 	constructor(
-		encoding: Encoding = "utf-8",
+		encoding = "utf-8",
 		{ fatal = false, ignoreBOM = false }: ConstructorParameters<typeof TextDecoder>[1] = {}
 	) {
 		const decoder = new TextDecoder(encoding, { fatal, ignoreBOM });
