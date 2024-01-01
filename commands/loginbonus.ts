@@ -22,7 +22,12 @@ export const execute: CommandHandler = async (interaction, user) => {
 			})
 			.LoginBonus())!;
 	}
-	const datediff = now.getDate() - LoginBonus.LastLogin!.getDate();
+	console.log(LoginBonus);
+	const lastLogin = Math.floor(LoginBonus.LastLogin!.valueOf() / (1000 * 60 * 60 * 24));
+	const nowDate = Math.floor(now.valueOf() / (1000 * 60 * 60 * 24));
+	console.log(lastLogin, nowDate);
+	const datediff = Math.floor(nowDate - lastLogin);
+	console.log(datediff);
 	let consecutive_count: number;
 	let max_consecutive_count: number;
 
