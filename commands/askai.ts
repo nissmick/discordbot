@@ -92,9 +92,13 @@ async function genAIHandler(
 	content: Parameters<typeof geminiProModel.generateContentStream>[0],
 	parentPromptId?: number
 ) {
+	if (!interaction.inGuild()) {
+		interaction.reply("サーバー上以外で実行することはできません");
+		return;
+	}
 	const replied = await interaction.deferReply(/*{ ephemeral: true }*/);
 	log("[ Gemini Pro ] 質問: " + contentText);
-	let fulltext = "質問: " + contentText + "\n\n";
+	let fulltext = `質問: ${contentText}\n\n`;
 	let output = "";
 	const texts: { text: string; replied: Message<boolean> }[] = [];
 	try {
