@@ -41,11 +41,7 @@ const commands = [
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, async (interaction) => {
-	if (interaction.isChatInputCommand()) {
-		commandHandler(interaction);
-		console.log("command handleing end");
-		return;
-	}
+	if (interaction.isChatInputCommand()) commandHandler(interaction);
 	if (interaction.isButton()) buttonHandler(interaction);
 	if (interaction.isModalSubmit()) await modalHandler(interaction);
 	if (interaction.isAutocomplete()) autoCompleteHandler(interaction);
@@ -105,7 +101,6 @@ client.on(Events.MessageCreate, async (message) => {
 		console.log("sended: " + matched?.[1]);
 	}
 });
-/*
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	if (newMessage.author?.id === config.client_id) return;
 	if (oldMessage.content && newMessage.content) {
@@ -138,7 +133,7 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 		}
 	}
 });
-*/
+
 async function commandHandler(interaction: ChatInputCommandInteraction) {
 	const userdata = (await prisma.user.findUnique({
 		where: {
