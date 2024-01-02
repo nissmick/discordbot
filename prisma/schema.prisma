@@ -8,15 +8,18 @@ datasource db {
 }
 
 model User {
-  discord_username     String      @unique
-  id                   Int         @id @default(autoincrement())
-  discord_id           BigInt      @unique
-  screen_name          String
-  loginBonusId         Int?
-  emoji_default_server String      @default("misskey.io")
-  isBot                Boolean
-  Prompts              Prompts[]
-  LoginBonus           LoginBonus? @relation(fields: [loginBonusId], references: [id])
+  discord_username           String                 @unique
+  id                         Int                    @id @default(autoincrement())
+  discord_id                 BigInt                 @unique
+  iconUrl                    String                 @default("https://discord.com/assets/5d6a5e9d7d77ac29116e.png") @map("icon_url")
+  screen_name                String
+  loginBonusId               Int?
+  emoji_default_server       String                 @default("misskey.io")
+  isBot                      Boolean
+  Prompts                    Prompts[]
+  LoginBonus                 LoginBonus?            @relation(fields: [loginBonusId], references: [id])
+  collaboratedMessage        CollaborativeMessage[] @relation("collaborator")
+  createdCollaboratedMessage CollaborativeMessage[]
 }
 
 model LoginBonus {
@@ -46,12 +49,15 @@ model Prompt {
 }
 
 model CollaborativeMessage {
-  id        Int                                      @id @default(autoincrement())
-  content   String
-  messageId String
-  channelId String
-  guildId   String
-  editable  CollaborativeMessageEditablePermission[]
+  id           Int                                      @id @default(autoincrement())
+  content      String
+  messageId    String
+  channelId    String
+  guildId      String
+  editable     CollaborativeMessageEditablePermission[]
+  collaborator User[]                                   @relation("collaborator")
+  author       User                                     @relation(fields: [authorUserId], references: [id])
+  authorUserId Int
 }
 
 model CollaborativeMessageEditablePermission {

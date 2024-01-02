@@ -73,6 +73,9 @@ async function buttonHandler(interaction: ButtonInteraction) {
 	if (interaction.customId.startsWith("collaborative-")) {
 		collaborative_message.buttonHandler(interaction);
 	}
+	if (interaction.customId.startsWith("inspect-")) {
+		collaborative_message.inspectButtonHandler(interaction);
+	}
 }
 const editedStore: {
 	[x: string]:
@@ -218,6 +221,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 					screen_name: member.displayName,
 					discord_username: member.user.tag,
 					isBot: member.user.bot,
+					iconUrl: member.user.displayAvatarURL({ extension: "png" }),
 				},
 			});
 			const resolver = new EmojiResolver(userdata.emoji_default_server, "misskey.io", "misskey.04.si");

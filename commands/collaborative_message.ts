@@ -13,6 +13,7 @@ import {
 	type TextBasedChannel,
 	TextInputBuilder,
 	TextInputStyle,
+	EmbedBuilder,
 } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
@@ -66,13 +67,22 @@ export const execute: CommandHandler = async (interaction) => {
 			editable: {
 				create: permitted,
 			},
+			author: {
+				connect: {
+					discord_id: BigInt(interaction.user.id),
+				},
+			},
 		},
 	});
 	const continuebutton = new ButtonBuilder()
 		.setCustomId(`collaborative-${created.id}`)
 		.setLabel("編集する")
 		.setStyle(ButtonStyle.Secondary);
-	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(continuebutton);
+	const inspectButton = new ButtonBuilder()
+		.setCustomId(`inspect-${created.id}`)
+		.setLabel("inspect")
+		.setStyle(ButtonStyle.Secondary);
+	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(continuebutton).addComponents(inspectButton);
 
 	await sended.edit({
 		content: "<a:loading:1186939837073326151> Processing...",
@@ -125,7 +135,7 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 	//let isEditable = false;
 	const isEditable = checkPermitted(interaction, column);
 	if (!isEditable) {
-		await interaction.reply("あなたは編集権限を所有していません");
+		await interaction.reply({ ephemeral: true, content: "あなたは編集権限を所有していません" });
 	}
 	await message.edit({
 		content: content,
@@ -140,6 +150,11 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 		},
 		data: {
 			content: content,
+			collaborator: {
+				connect: {
+					discord_id: BigInt(interaction.user.id),
+				},
+			},
 		},
 	});
 
@@ -184,7 +199,49 @@ export const buttonHandler = async (interaction: ButtonInteraction) => {
 		.setCustomId(interaction.customId)
 		.addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(input));
 
-	interaction.showModal(modal);
+	await interaction.showModal(modal);
+};
+
+export const inspectButtonHandler = async (interaction: ButtonInteraction) => {
+	const id = parseInt(interaction.customId.slice("inspect-".length));
+	const column = await prisma.collaborativeMessage.findUnique({
+		where: {
+			id,
+		},
+		include: {
+			collaborator: true,
+			editable: true,
+			_count: true,
+			author: true,
+		},
+	});
+	if (!column) {
+		await interaction.reply("DBが破損してるかも");
+		return;
+	}
+	await interaction.deferReply();
+	const embed = new EmbedBuilder()
+		.setTitle(`collaborative-${column.id}`)
+		.setAuthor({
+			name: column.author.discord_username + "によるメッセージ",
+			iconURL: column.author.iconUrl,
+			url: `https://discord.com/users/${column.author.discord_id}`,
+		})
+		.setURL(`https://discord.com/channels/${column.guildId}/${column.channelId}/${column.messageId}`)
+		.setDescription("このメッセージの詳細")
+		.addFields({
+			name: "編集者",
+			value: column.collaborator.map((user) => `<@${user.discord_id}>`).join("\n"),
+			inline: true,
+		})
+		.addFields({
+			name: "編集可能",
+			value: column.editable
+				.map((editable) => (editable.isRole ? `<@&${editable.permitted}>` : `<@${editable.permitted}>`))
+				.join("\n"),
+			inline: true,
+		});
+	interaction.editReply({ embeds: [embed] });
 };
 
 function checkPermitted(
