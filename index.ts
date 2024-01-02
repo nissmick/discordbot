@@ -70,6 +70,9 @@ async function buttonHandler(interaction: ButtonInteraction) {
 	if (interaction.customId.startsWith("continue-")) {
 		askai.buttonHandler(interaction);
 	}
+	if (interaction.customId.startsWith("collaborative-")) {
+		collaborative_message.buttonHandler(interaction);
+	}
 }
 const editedStore: {
 	[x: string]:

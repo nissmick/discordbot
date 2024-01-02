@@ -1,19 +1,23 @@
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
+	type ButtonInteraction,
 	ButtonStyle,
 	GuildMember,
+	type Interaction,
+	type ModalActionRowComponentBuilder,
 	ModalBuilder,
 	ModalSubmitInteraction,
 	Role,
 	SlashCommandBuilder,
-	TextBasedChannel,
+	type TextBasedChannel,
 	TextInputBuilder,
 	TextInputStyle,
 } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 import { client, prisma } from "../store";
+import { CollaborativeMessageEditablePermission } from "@prisma/client";
 
 const Options = {
 	editable: "editable",
@@ -119,19 +123,23 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 	}
 
 	//let isEditable = false;
-	for (const row of column.editable) {
-		console.log(row); /*
-		if (row.isRole) {
-			console.log((interaction.member.roles as GuildMemberRoleManager).cache.entries());
-		} else {
-			console.log(row.permitted === interaction.user.id);
-		}*/
+	const isEditable = checkPermitted(interaction, column);
+	if (!isEditable) {
+		await interaction.reply("あなたは編集権限を所有していません");
 	}
-
 	await message.edit({
 		content: content,
 		allowedMentions: {
 			parse: [],
+		},
+	});
+
+	await prisma.collaborativeMessage.update({
+		where: {
+			id: parseInt(id),
+		},
+		data: {
+			content: content,
 		},
 	});
 
@@ -142,3 +150,68 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 
 	return;
 };
+
+export const buttonHandler = async (interaction: ButtonInteraction) => {
+	const id = interaction.customId.slice("collaborative-".length);
+	if (!interaction.inGuild()) return;
+	const column = await prisma.collaborativeMessage.findUnique({
+		where: {
+			id: parseInt(id),
+		},
+		include: {
+			editable: true,
+		},
+	});
+	if (!column) {
+		await interaction.reply("エラー: テーブルが破損しています");
+		return;
+	}
+	const isEditable = checkPermitted(interaction, column);
+
+	if (!isEditable) {
+		interaction.reply({
+			ephemeral: true,
+			content: "あなたは編集者に追加されていません",
+		});
+	}
+	const input = new TextInputBuilder()
+		.setCustomId("content")
+		.setLabel("メッセージの内容")
+		.setStyle(TextInputStyle.Paragraph)
+		.setValue(column.content);
+	const modal = new ModalBuilder()
+		.setTitle("メッセージの内容")
+		.setCustomId(interaction.customId)
+		.addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(input));
+
+	interaction.showModal(modal);
+};
+
+function checkPermitted(
+	interaction: Interaction<"cached" | "raw">,
+	column: { editable: CollaborativeMessageEditablePermission[] }
+) {
+	let isEditable = false;
+	for (const row of column.editable) {
+		if (row.isRole) {
+			if (interaction.member instanceof GuildMember) {
+				if (interaction.member.roles.cache.has(row.permitted)) {
+					isEditable = true;
+					break;
+				}
+			} else {
+				const isPermitted = interaction.member.roles.some((roleId) => roleId === row.permitted);
+				if (isPermitted) {
+					isEditable = true;
+					break;
+				}
+			}
+		} else {
+			if (interaction.user.id === row.permitted) {
+				isEditable = true;
+				break;
+			}
+		}
+	}
+	return isEditable;
+}
