@@ -40,10 +40,14 @@ const commands = [
 	collaborative_message.command,
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
-client.on(Events.InteractionCreate, (interaction) => {
-	if (interaction.isChatInputCommand()) commandHandler(interaction);
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (interaction.isChatInputCommand()) {
+		commandHandler(interaction);
+		console.log("command handleing end");
+		return;
+	}
 	if (interaction.isButton()) buttonHandler(interaction);
-	if (interaction.isModalSubmit()) modalHandler(interaction);
+	if (interaction.isModalSubmit()) await modalHandler(interaction);
 	if (interaction.isAutocomplete()) autoCompleteHandler(interaction);
 	// if (interaction.isButton()) buttonHandler(interaction);
 	//	console.log(interaction);
@@ -60,9 +64,9 @@ async function autoCompleteHandler(interaction: AutocompleteInteraction<CacheTyp
 
 async function modalHandler(interaction: ModalSubmitInteraction) {
 	if (interaction.customId.startsWith("continue-")) {
-		askai.modalHandler(interaction);
+		await askai.modalHandler(interaction);
 	} else if (interaction.customId.startsWith("collaborative-")) {
-		collaborative_message.modalHandler(interaction);
+		await collaborative_message.modalSubmitHandler(interaction);
 	}
 }
 
@@ -101,6 +105,7 @@ client.on(Events.MessageCreate, async (message) => {
 		console.log("sended: " + matched?.[1]);
 	}
 });
+/*
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 	if (newMessage.author?.id === config.client_id) return;
 	if (oldMessage.content && newMessage.content) {
@@ -133,7 +138,7 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 		}
 	}
 });
-
+*/
 async function commandHandler(interaction: ChatInputCommandInteraction) {
 	const userdata = (await prisma.user.findUnique({
 		where: {
@@ -177,7 +182,8 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			youyaku.execute(...arg);
 			break;
 		case Commands.collaborative_message:
-			collaborative_message.execute(...arg);
+			await collaborative_message.execute(...arg);
+			console.log("command end");
 			break;
 	}
 }
