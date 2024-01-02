@@ -3,6 +3,13 @@ import { prisma } from "../store";
 import { Commands } from "../enum";
 import { CommandHandler } from "../typeing";
 
+function calcLocaledDate(td: number, date: Date) {
+	const t = date.valueOf();
+	return (t / 1000 - 60 * 60 * td) / (60 * 60 * 24);
+}
+
+const calcJST = calcLocaledDate.bind(null, 9);
+
 export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
 export const execute: CommandHandler = async (interaction, user) => {
 	const replied = await interaction.deferReply();
@@ -23,8 +30,8 @@ export const execute: CommandHandler = async (interaction, user) => {
 			.LoginBonus())!;
 	}
 	console.log(LoginBonus);
-	const lastLogin = Math.floor(LoginBonus.LastLogin!.valueOf() / (1000 * 60 * 60 * 24));
-	const nowDate = Math.floor(now.valueOf() / (1000 * 60 * 60 * 24));
+	const lastLogin = Math.floor(calcJST(LoginBonus.LastLogin));
+	const nowDate = Math.floor(calcJST(now));
 	console.log(lastLogin, nowDate);
 	const datediff = Math.floor(nowDate - lastLogin);
 	console.log(datediff);
