@@ -1,5 +1,15 @@
 #!/bin/bash
 bun init.ts
 bunx prisma migrate dev --name init
-bun init.ts
+touch bot.db
 mkdir log
+configfile="config.json"
+if [ ! -e $configfile ]; then
+
+	cat <<EOF >$configfile
+{
+	"\$schema": "./schema.json"
+}
+EOF
+
+fi

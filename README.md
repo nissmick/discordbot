@@ -1,5 +1,8 @@
 # discord_bot
 
+bun で動かす場合、`@google/generative-ai`パッケージで TextDecoderStream が存在しないというエラーが起きるはずです。
+その場合は、polyfill/textdecorder.ts を読み込むようにパッケージのソースコードを改変してください。
+
 To install dependencies:
 
 ```bash
