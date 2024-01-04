@@ -5,7 +5,7 @@ import { CommandHandler } from "../typeing";
 
 export function calcLocaledDate(td: number, date: Date) {
 	const t = date.valueOf();
-	return (t / 1000 - 60 * 60 * td) / (60 * 60 * 24);
+	return (t / 1000 + 60 * 60 * td) / (60 * 60 * 24);
 }
 
 export const calcJST = calcLocaledDate.bind(null, 9);
