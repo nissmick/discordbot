@@ -1,4 +1,4 @@
-type emoji = {
+type Emoji = {
 	aliases: string[];
 	name: string;
 	category: string;
@@ -7,40 +7,54 @@ type emoji = {
 
 type CacheData = {
 	cached_at: Date;
-	data: emoji[];
+	data: Emoji[];
 };
 type Cache = Map<string, CacheData>;
 
+const FailedCount: Map<string, number> = new Map();
 const Cache: Cache = new Map();
-
+type EmojiResponse = { emojis: Emoji[] };
 async function fetchEmojiWithCache(url: `https://${string}/api/emojis`, cache: boolean = true) {
 	const now = new Date();
 	const cached = Cache.get(url);
+	const count = FailedCount.get(url);
+	// 失敗し過ぎ、諦めた方がいい
+	if (count && count > 5) {
+		return null;
+	}
 	if (cache && cached && now.valueOf() - cached.cached_at.valueOf() < 1000 * 60 * 5) {
 		// console.log("use cache");
 		return cached.data;
 	} else {
 		console.log(`fetching to ${url}`);
-		const res = await fetch(url);
-		const json = (await res.json()) as { emojis: emoji[] };
-		const data = json.emojis;
-		Cache.set(url, {
-			cached_at: new Date(),
-			data,
-		});
-		return data;
+		try {
+			const res = await fetch(url);
+			const json = (await res.json()) as EmojiResponse;
+			const data = json.emojis;
+			Cache.set(url, {
+				cached_at: new Date(),
+				data,
+			});
+			return data;
+		} catch (error: unknown) {
+			FailedCount.set(url, (count || 0) + 1);
+			return null;
+		}
 	}
 }
 
 export class EmojiProvider {
 	domain: string;
-	map: Map<string, emoji>;
+	map: Map<string, Emoji>;
 	constructor(domain = "misskey.io") {
 		this.domain = domain;
-		this.map = new Map<string, emoji>();
+		this.map = new Map<string, Emoji>();
 	}
 	async fetch(usecache: boolean) {
 		const emojis = await fetchEmojiWithCache(`https://${this.domain}/api/emojis`, usecache);
+		if (emojis === null) {
+			return null;
+		}
 		emojis.forEach((e) => {
 			this.map.set(e.name, e);
 		});
@@ -48,7 +62,7 @@ export class EmojiProvider {
 	get(name: string) {
 		return this.map.get(name);
 	}
-	getUnWrap(name: string): emoji {
+	getUnWrap(name: string): Emoji {
 		const item = this.get(name);
 		if (item) {
 			return item;
@@ -109,9 +123,9 @@ export class EmojiResolver {
 		}
 		return null;
 	}
-	query(partial_match: string[]): Map<string, emoji[]>;
-	query(match: RegExp): Map<string, emoji[]>;
-	query(partial_match: string[] | RegExp): Map<string, emoji[]> {
+	query(partial_match: string[]): Map<string, Emoji[]>;
+	query(match: RegExp): Map<string, Emoji[]>;
+	query(partial_match: string[] | RegExp): Map<string, Emoji[]> {
 		let match: RegExp;
 		if (partial_match instanceof RegExp) {
 			match = partial_match;
@@ -119,7 +133,7 @@ export class EmojiResolver {
 			match = new RegExp(partial_match.join(".*?"));
 		}
 		const path = this.PATH.keys();
-		const result: Map<string, emoji[]> = new Map();
+		const result: Map<string, Emoji[]> = new Map();
 		for (const domain of path) {
 			const provider = this.repository.get(domain)!;
 			const filted = [...provider.map.values()].filter((emoji) => match.test(emoji.name));
