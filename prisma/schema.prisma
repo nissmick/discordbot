@@ -65,5 +65,5 @@ model CollaborativeMessageEditablePermission {
   collaborativeMessageId Int
   isRole                 Boolean
   permitted              String
-  CollaborativeMessage   CollaborativeMessage @relation(fields: [collaborativeMessageId], references: [id])
+  CollaborativeMessage   CollaborativeMessage @relation(fields: [collaborativeMessageId], references: [id], onDelete: Cascade)
 }

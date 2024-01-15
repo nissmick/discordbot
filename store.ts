@@ -11,6 +11,9 @@ export const prisma = new PrismaClient({
 export { config };
 // Create a new client instance
 export const client = new Client({
+	rest: {
+		timeout: 6_0000,
+	},
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMembers,

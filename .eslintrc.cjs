@@ -42,6 +42,15 @@ module.exports = {
 		"semi": [
 			"error",
 			"always"
+		],
+		// 命名規則縛りたいのに動かない気がするんです、どういうことなんでしょう、気のせいですこと?
+		"@typescript-eslint/naming-convention": [
+			"error",
+			{
+				selector: "typeLike",
+				format: ["PascalCase"],
+			}
+
 		]
 	}
 };

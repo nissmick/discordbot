@@ -61,7 +61,7 @@ async function autoCompleteHandler(interaction: AutocompleteInteraction<CacheTyp
 async function modalHandler(interaction: ModalSubmitInteraction) {
 	if (interaction.customId.startsWith("continue-")) {
 		await askai.modalHandler(interaction);
-	} else if (interaction.customId.startsWith("collaborative-")) {
+	} else if (interaction.customId.startsWith(collaborative_message.editPrefix)) {
 		await collaborative_message.modalSubmitHandler(interaction);
 	}
 }
@@ -70,11 +70,11 @@ async function buttonHandler(interaction: ButtonInteraction) {
 	if (interaction.customId.startsWith("continue-")) {
 		askai.buttonHandler(interaction);
 	}
-	if (interaction.customId.startsWith("collaborative-")) {
-		collaborative_message.buttonHandler(interaction);
+	if (interaction.customId.startsWith(collaborative_message.editPrefix)) {
+		collaborative_message.editHandler(interaction);
 	}
-	if (interaction.customId.startsWith("inspect-")) {
-		collaborative_message.inspectButtonHandler(interaction);
+	if (interaction.customId.startsWith(collaborative_message.selectPrefix)) {
+		collaborative_message.selectButtonHandler(interaction);
 	}
 }
 const editedStore: {

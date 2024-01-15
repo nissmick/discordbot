@@ -14,22 +14,83 @@ import {
 	TextInputBuilder,
 	TextInputStyle,
 	EmbedBuilder,
+	ChatInputCommandInteraction,
 } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 import { client, prisma } from "../store";
-import { CollaborativeMessageEditablePermission } from "@prisma/client";
+import { CollaborativeMessage, CollaborativeMessageEditablePermission, User } from "@prisma/client";
 
-const Options = {
-	editable: "editable",
+const collaborativePrefix = "collaborative-";
+export const editPrefix = `${collaborativePrefix}edit-`;
+export const selectPrefix = `${collaborativePrefix}select-`;
+
+/** そのユーザーが選択しているメッセージを保管する */
+const selected: Map<
+	string,
+	CollaborativeMessage & { author: User } & { editable: CollaborativeMessageEditablePermission[] } & {
+		collaborator: User[];
+	}
+> = new Map();
+
+const SubCommand = {
+	create: {
+		name: "create",
+		options: {
+			editable: "editable",
+		},
+	},
+	add_editable: {
+		name: "add_editable",
+		options: {
+			editable: "editable",
+		},
+	},
+	inspect: {
+		name: "inspect",
+	},
 } as const;
 
 export const command = new SlashCommandBuilder()
 	.setName(Commands.collaborative_message)
 	.setDescription("共同編集できるメッセージを生成する")
-	.addMentionableOption((o) => o.setName(Options.editable).setDescription("編集できるユーザー・ロール"));
+	.addSubcommand((o) =>
+		o
+			.setName(SubCommand.create.name)
+			.setDescription("編集可能なメッセージを新規作成する")
+			.addMentionableOption((o) =>
+				o.setName(SubCommand.create.options.editable).setDescription("編集できるユーザー・ロール")
+			)
+	)
+	.addSubcommand((o) =>
+		o
+			.setName(SubCommand.add_editable.name)
+			.setDescription("現在選択している共同選択可能メッセージに編集可能なユーザーを増やします")
+			.addMentionableOption((o) =>
+				o.setName(SubCommand.add_editable.options.editable).setDescription("編集できるユーザー・ロール")
+			)
+	)
+	.addSubcommand((o) =>
+		o.setName(SubCommand.inspect.name).setDescription("選択している共同編集可能メッセージの詳細な情報を取得する")
+	);
 export const execute: CommandHandler = async (interaction) => {
-	const editable = interaction.options.getMentionable(Options.editable, false);
+	const commandName = interaction.options.getSubcommand(true) as keyof typeof SubCommand;
+	switch (commandName) {
+		case "create":
+			await createHandler(interaction);
+			break;
+		case "add_editable":
+			await addEditableHandler(interaction);
+			break;
+		case "inspect":
+			await inspectCommandHandler(interaction);
+			break;
+	}
+	return;
+};
+
+async function createHandler(interaction: ChatInputCommandInteraction) {
+	const editable = interaction.options.getMentionable(SubCommand.create.options.editable, false);
 	if (!interaction.inGuild()) return;
 	if (!interaction.channel) {
 		await interaction.reply({
@@ -75,12 +136,12 @@ export const execute: CommandHandler = async (interaction) => {
 		},
 	});
 	const continuebutton = new ButtonBuilder()
-		.setCustomId(`collaborative-${created.id}`)
+		.setCustomId(`${editPrefix}${created.id}`)
 		.setLabel("編集する")
 		.setStyle(ButtonStyle.Secondary);
 	const inspectButton = new ButtonBuilder()
-		.setCustomId(`inspect-${created.id}`)
-		.setLabel("inspect")
+		.setCustomId(`${selectPrefix}${created.id}`)
+		.setLabel("select")
 		.setStyle(ButtonStyle.Secondary);
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(continuebutton).addComponents(inspectButton);
 
@@ -94,16 +155,79 @@ export const execute: CommandHandler = async (interaction) => {
 		.setStyle(TextInputStyle.Paragraph);
 	const modal = new ModalBuilder()
 		.setTitle("メッセージの内容")
-		.setCustomId(`collaborative-${created.id}`)
+		.setCustomId(`${editPrefix}${created.id}`)
 		.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
 
 	await interaction.showModal(modal);
 	return;
-};
+}
+
+async function addEditableHandler(interaction: ChatInputCommandInteraction) {
+	const editable = interaction.options.getMentionable(SubCommand.add_editable.options.editable, true);
+	const message = selected.get(interaction.user.id);
+	if (!message) {
+		interaction.reply({
+			ephemeral: true,
+			content: "あなたはメッセージを選択していません。\n対象のメッセージのselectボタンを押して選択してください",
+		});
+		return;
+	}
+	if (!(message.author.discord_id === BigInt(interaction.user.id))) {
+		await interaction.reply({
+			ephemeral: true,
+			content:
+				"あなたはこのメッセージに対して編集者を追加できません。以下のような理由が考えられます: \n\
+				* メッセージの作成者ではない - このコマンドでメッセージの編集者を追加できるのは、メッセージを作成した人のみです。",
+		});
+		return;
+	}
+	let permitted: { isRole: boolean; permitted: string };
+	if (editable instanceof Role) {
+		permitted = {
+			isRole: true,
+			permitted: editable.id,
+		};
+	} else if (editable instanceof GuildMember) {
+		permitted = {
+			isRole: false,
+			permitted: editable.id,
+		};
+	} else {
+		throw new Error("なんかやばいわ、RoleでもGuildMemberでもないのが飛び込んできたわ、やべえ");
+	}
+	try {
+		await prisma.collaborativeMessageEditablePermission.create({
+			data: {
+				...permitted,
+				CollaborativeMessage: {
+					connect: {
+						id: message.id,
+					},
+				},
+			},
+		});
+	} catch (error) {
+		console.error(error);
+		interaction.reply("なんか失敗しました。てへぺろ");
+		return;
+	}
+
+	await interaction.reply({
+		content: `[collaborative-${message.id}](https://discord.com/channels/${message.guildId}/${message.channelId}/${
+			message.messageId
+		})に、${
+			permitted.isRole ? `<@&${permitted.permitted}>` : `<@!${permitted.permitted}>`
+		}への編集権限を与えました`,
+		allowedMentions: {
+			parse: [],
+		},
+		flags: ["SuppressEmbeds"],
+	});
+}
 
 export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) => {
 	if (!interaction.inGuild()) return;
-	const id = interaction.customId.slice("collaborative-".length);
+	const id = interaction.customId.slice(editPrefix.length);
 	const content = interaction.fields.getTextInputValue("content");
 	const column = await prisma.collaborativeMessage.findUnique({
 		where: {
@@ -166,8 +290,8 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 	return;
 };
 
-export const buttonHandler = async (interaction: ButtonInteraction) => {
-	const id = interaction.customId.slice("collaborative-".length);
+export const editHandler = async (interaction: ButtonInteraction) => {
+	const id = interaction.customId.slice(editPrefix.length);
 	if (!interaction.inGuild()) return;
 	const column = await prisma.collaborativeMessage.findUnique({
 		where: {
@@ -202,8 +326,8 @@ export const buttonHandler = async (interaction: ButtonInteraction) => {
 	await interaction.showModal(modal);
 };
 
-export const inspectButtonHandler = async (interaction: ButtonInteraction) => {
-	const id = parseInt(interaction.customId.slice("inspect-".length));
+export const selectButtonHandler = async (interaction: ButtonInteraction) => {
+	const id = parseInt(interaction.customId.slice(selectPrefix.length));
 	const column = await prisma.collaborativeMessage.findUnique({
 		where: {
 			id,
@@ -219,7 +343,22 @@ export const inspectButtonHandler = async (interaction: ButtonInteraction) => {
 		await interaction.reply("DBが破損してるかも");
 		return;
 	}
-	await interaction.deferReply();
+	interaction.reply({
+		ephemeral: true,
+		content: "選択しました",
+	});
+	selected.set(interaction.user.id, column);
+};
+
+async function inspectCommandHandler(interaction: ChatInputCommandInteraction) {
+	const column = selected.get(interaction.user.id);
+	if (!column) {
+		interaction.reply({
+			ephemeral: true,
+			content: "メッセージが選択されていません。選択したいメッセージのselectボタンを押すことで選択できます",
+		});
+		return;
+	}
 	const embed = new EmbedBuilder()
 		.setTitle(`collaborative-${column.id}`)
 		.setAuthor({
@@ -241,8 +380,8 @@ export const inspectButtonHandler = async (interaction: ButtonInteraction) => {
 				.join("\n"),
 			inline: true,
 		});
-	interaction.editReply({ embeds: [embed] });
-};
+	await interaction.reply({ embeds: [embed] });
+}
 
 function checkPermitted(
 	interaction: Interaction<"cached" | "raw">,
