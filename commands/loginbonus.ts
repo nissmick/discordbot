@@ -10,25 +10,20 @@ export function calcLocaledDate(td: number, date: Date) {
 
 export const calcJST = calcLocaledDate.bind(null, 9);
 
+const NowProcessing = new Map<string, boolean>();
+
 export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
 export const execute: CommandHandler = async (interaction, user) => {
-	const replied = await interaction.deferReply();
-	const now = new Date();
-	let LoginBonus = user.LoginBonus;
-	if (!LoginBonus) {
-		LoginBonus = (await prisma.user
-			.update({
-				where: {
-					discord_id: BigInt(interaction.user.id),
-				},
-				data: {
-					LoginBonus: {
-						create: {},
-					},
-				},
-			})
-			.LoginBonus())!;
+	if (NowProcessing.get(interaction.user.id)) {
+		interaction.reply({ ephemeral: true, content: "処理中です" });
+		return;
 	}
+	NowProcessing.set(interaction.user.id, true);
+	const replied = await interaction.deferReply({
+		fetchReply: true,
+	});
+	const now = new Date();
+	const LoginBonus = user.LoginBonus;
 	console.log(LoginBonus);
 	const lastLogin = Math.floor(calcJST(LoginBonus.LastLogin));
 	const nowDate = Math.floor(calcJST(now));
@@ -40,8 +35,8 @@ export const execute: CommandHandler = async (interaction, user) => {
 
 	if (datediff === 0) {
 		await interaction.editReply("今日はもうログイン済みです");
-		const msg = await replied.fetch();
-		await msg.react("❌");
+		await replied.react("❌");
+		NowProcessing.set(interaction.user.id, false);
 		return;
 	} else if (datediff === 1) {
 		consecutive_count = LoginBonus.consecutive_count + 1;
@@ -92,8 +87,9 @@ export const execute: CommandHandler = async (interaction, user) => {
 			name: "出席確認",
 		});
 	await interaction.editReply({ embeds: [embed], content: "" });
-	const msg = await replied.fetch();
-	await msg.react("✅");
+	await replied.react("✅");
+	NowProcessing.set(interaction.user.id, false);
+	return;
 };
 /*
  */

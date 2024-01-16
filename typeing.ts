@@ -8,7 +8,7 @@ type UserData = {
 		LastLogin: Date;
 		consecutive_count: number;
 		max_consecutive_count: number;
-	} | null;
+	};
 	discord_username: string;
 	id: number;
 	discord_id: bigint;

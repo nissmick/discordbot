@@ -13,11 +13,11 @@ model User {
   discord_id                 BigInt                 @unique
   iconUrl                    String                 @default("https://discord.com/assets/5d6a5e9d7d77ac29116e.png") @map("icon_url")
   screen_name                String
-  loginBonusId               Int?
+  loginBonusId               Int
   emoji_default_server       String                 @default("misskey.io")
   isBot                      Boolean
   Prompts                    Prompts[]
-  LoginBonus                 LoginBonus?            @relation(fields: [loginBonusId], references: [id])
+  LoginBonus                 LoginBonus             @relation(fields: [loginBonusId], references: [id])
   collaboratedMessage        CollaborativeMessage[] @relation("collaborator")
   createdCollaboratedMessage CollaborativeMessage[]
 }
