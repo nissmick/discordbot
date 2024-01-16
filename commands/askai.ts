@@ -173,14 +173,22 @@ async function genAIHandler(
 		}
 		await prisma.prompt.create({
 			data: {
-				promptsId: prompts.id,
+				Prompts: {
+					connect: {
+						id: prompts.id,
+					},
+				},
 				content: contentText,
 				isUser: true,
 			},
 		});
 		await prisma.prompt.create({
 			data: {
-				promptsId: prompts.id,
+				Prompts: {
+					connect: {
+						id: prompts.id,
+					},
+				},
 				content: output,
 				isUser: false,
 			},

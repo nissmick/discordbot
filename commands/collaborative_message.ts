@@ -28,8 +28,10 @@ export const selectPrefix = `${collaborativePrefix}select-`;
 /** そのユーザーが選択しているメッセージを保管する */
 const selected: Map<
 	string,
-	CollaborativeMessage & { author: User } & { editable: CollaborativeMessageEditablePermission[] } & {
+	CollaborativeMessage & {
+		editable: CollaborativeMessageEditablePermission[];
 		collaborator: User[];
+		author: User;
 	}
 > = new Map();
 
@@ -67,7 +69,10 @@ export const command = new SlashCommandBuilder()
 			.setName(SubCommand.add_editable.name)
 			.setDescription("現在選択している共同選択可能メッセージに編集可能なユーザーを増やします")
 			.addMentionableOption((o) =>
-				o.setName(SubCommand.add_editable.options.editable).setDescription("編集できるユーザー・ロール")
+				o
+					.setName(SubCommand.add_editable.options.editable)
+					.setDescription("編集できるユーザー・ロール")
+					.setRequired(true)
 			)
 	)
 	.addSubcommand((o) =>
@@ -101,6 +106,7 @@ async function createHandler(interaction: ChatInputCommandInteraction) {
 	const sended = await interaction.channel.send({
 		content: "<a:loading:1186939837073326151> Processing...",
 	});
+
 	const permitted: { isRole: boolean; permitted: string }[] = [];
 	permitted.push({
 		isRole: false,
