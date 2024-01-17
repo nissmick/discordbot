@@ -9,9 +9,15 @@
 		"typescript": "^5.0.0"
 	},
 	"workspaces": [
-		"packages/*"
+		"packages/core",
+		"packages/database"
 	],
 	"scripts": {
+		"preinstall": "rm bun.lockb",
+		"postinstall": "chmod +x postinstall && ./postinstall",
 		"start": "cd packages/core && bun start"
+	},
+	"dependencies": {
+		"@prisma/client": "^5.8.1"
 	}
 }

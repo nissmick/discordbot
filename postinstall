@@ -1,9 +1,5 @@
 #!/bin/bash
-cd packages/database
-touch bot.db
-bunx prisma migrate dev --name init
-cd ../../
-mkdir log
+echo "初期化中"
 configfile="config.json"
 if [ ! -e $configfile ]; then
 
@@ -14,3 +10,10 @@ if [ ! -e $configfile ]; then
 EOF
 
 fi
+cd packages/database
+
+touch bot.db
+bunx prisma db push
+
+cd ../core
+mkdir -p log

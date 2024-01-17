@@ -3,14 +3,14 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "^5.8.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@prisma/client": "5.7.1",
-    "prisma": "^5.8.1"
+    "@prisma/client": "5.8.1"
   },
   "exports": {
     ".": "./index.ts",
