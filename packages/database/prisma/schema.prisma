@@ -33,7 +33,7 @@ model LoginBonus {
     id                    Int      @id @default(autoincrement())
     count                 Int      @default(0)
     Dates                 String   @default("")
-    LastLogin             DateTime @default(dbgenerated("'1970-01-01 00:00:00 +00:00'"))
+    LastLogin             DateTime @default(dbgenerated("0"))
     consecutive_count     Int      @default(0)
     max_consecutive_count Int      @default(0)
     User                  User[]

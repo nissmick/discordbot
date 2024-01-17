@@ -17,7 +17,11 @@
 	"scripts": {
 		"preinstall": "rm bun.lockb",
 		"postinstall": "chmod +x postinstall && ./postinstall",
-		"start": "cd packages/core && bun start"
+		"start": "cd packages/core && bun start",
+		"db:push": "bun prisma db push",
+		"db:studio": "bun prisma studio",
+		"prisma": "cd packages/database && prisma",
+		"core": "cd packages/core && bun"
 	},
 	"dependencies": {
 		"@prisma/client": "^5.8.1"
