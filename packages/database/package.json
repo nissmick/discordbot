@@ -13,6 +13,7 @@
     "prisma": "^5.8.1"
   },
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./prisma": "./prismatype.ts"
   }
 }
