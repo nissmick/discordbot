@@ -7,7 +7,7 @@ import type {
 	ModalSubmitInteraction,
 	TextBasedChannel,
 } from "discord.js";
-import config from "./config.json";
+import config from "../config.json";
 import {
 	greeting,
 	logincheck,

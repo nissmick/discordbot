@@ -25,8 +25,7 @@
   },
   "scripts": {
     "postinstall": "chmod +x postinstall && ./postinstall",
-    "start": "bun --bun index.ts",
-    "dev": "bun --bun --watch index.ts",
-    "debug": "bun index.ts"
+    "start": "bun --bun ./src/index.ts",
+    "dev": "bun --bun --watch ./src/index.ts"
   }
 }

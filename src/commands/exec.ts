@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
-import config from "../config.json";
+import config from "../../config.json";
 import { client } from "../store";
 const Option = {
 	code: "code",
