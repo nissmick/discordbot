@@ -19,7 +19,7 @@ import {
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
 import { client, prisma } from "../store";
-import { CollaborativeMessage, CollaborativeMessageEditablePermission, User } from "@prisma/client";
+import { CollaborativeMessage, CollaborativeMessageEditablePermission, User } from "database/client";
 
 const collaborativePrefix = "collaborative-";
 export const editPrefix = `${collaborativePrefix}edit-`;

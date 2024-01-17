@@ -1,8 +1,5 @@
 #!/bin/bash
-bun init.ts
-bunx prisma migrate dev --name init
-touch bot.db
-mkdir log
+# 設定ファイルが存在しなければ生成する
 configfile="config.json"
 if [ ! -e $configfile ]; then
 
@@ -12,4 +9,15 @@ if [ ! -e $configfile ]; then
 }
 EOF
 
+	cd packages/database
+	# データベースが存在しなければ作成する
+	touch bot.db
+	# データベースに対して内容をpushする
+	bunx prisma db push
+
+	cd ../core
+	mkdir -p log
+
 fi
+
+# configファイルがあるなら多分初期化処理いらないよね大丈夫よね
