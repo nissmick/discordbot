@@ -1,6 +1,6 @@
 throw new Error("こんなコード実行するって正気？");
 
-import { prisma } from "../src/store";
+import { prisma } from "../packages/core/src/store";
 
 const messages = await prisma.collaborativeMessage.findMany();
 

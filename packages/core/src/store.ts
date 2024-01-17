@@ -1,14 +1,11 @@
-import { PrismaClient } from "@prisma/client";
 import { Client, GatewayIntentBits } from "discord.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import config from "../config.json";
+import config from "../../../config.json";
+import prisma from "database";
 export const genAI = new GoogleGenerativeAI(config["gemini-api-key"]);
 const geminiProModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-export { geminiProModel };
-export const prisma = new PrismaClient({
-	log: ["info", "warn", "error"],
-});
-export { config };
+// 各種色々エクスポートする
+export { config, prisma, geminiProModel };
 // Create a new client instance
 export const client = new Client({
 	rest: {

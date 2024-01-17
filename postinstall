@@ -1,7 +1,8 @@
 #!/bin/bash
-bun init.ts
-bunx prisma migrate dev --name init
+cd packages/database
 touch bot.db
+bunx prisma migrate dev --name init
+cd ../../
 mkdir log
 configfile="config.json"
 if [ ! -e $configfile ]; then

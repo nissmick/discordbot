@@ -1,0 +1,76 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:../bot.db"
+}
+
+model User {
+    discord_username           String                 @unique
+    id                         Int                    @id @default(autoincrement())
+    discord_id                 BigInt                 @unique
+    iconUrl                    String                 @default("https://discord.com/assets/5d6a5e9d7d77ac29116e.png") @map("icon_url")
+    screen_name                String
+    loginBonusId               Int                    @unique
+    emoji_default_server       String                 @default("misskey.io")
+    isBot                      Boolean
+    Prompts                    Prompts[]
+    LoginBonus                 LoginBonus             @relation(fields: [loginBonusId], references: [id])
+    collaboratedMessage        CollaborativeMessage[] @relation("collaborator")
+    createdCollaboratedMessage CollaborativeMessage[]
+    //dAuthId                    Int?                   @unique
+    //dAuth                      DiscordAuth?           @relation(fields: [dAuthId], references: [id])
+}
+
+//model DiscordAuth {
+//id   Int    @id @default(autoincrement())
+//  User User[]
+//}
+
+model LoginBonus {
+    id                    Int      @id @default(autoincrement())
+    count                 Int      @default(0)
+    Dates                 String   @default("")
+    LastLogin             DateTime @default(dbgenerated("'1970-01-01 00:00:00 +00:00'"))
+    consecutive_count     Int      @default(0)
+    max_consecutive_count Int      @default(0)
+    User                  User[]
+}
+
+model Prompts {
+    id       Int      @id @default(autoincrement())
+    authorId BigInt
+    content  Prompt[]
+    author   User     @relation(fields: [authorId], references: [discord_id])
+}
+
+model Prompt {
+    id        Int     @id @default(autoincrement())
+    promptsId Int
+    /// userか、botか
+    isUser    Boolean
+    content   String
+    Prompts   Prompts @relation(fields: [promptsId], references: [id])
+}
+
+model CollaborativeMessage {
+    id           Int                                      @id @default(autoincrement())
+    content      String
+    messageId    String
+    channelId    String
+    guildId      String
+    editable     CollaborativeMessageEditablePermission[]
+    collaborator User[]                                   @relation("collaborator")
+    author       User                                     @relation(fields: [authorUserId], references: [id])
+    authorUserId Int
+}
+
+model CollaborativeMessageEditablePermission {
+    id                     Int                  @id @default(autoincrement())
+    collaborativeMessageId Int
+    isRole                 Boolean
+    permitted              String
+    CollaborativeMessage   CollaborativeMessage @relation(fields: [collaborativeMessageId], references: [id], onDelete: Cascade)
+}

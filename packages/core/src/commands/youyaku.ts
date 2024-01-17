@@ -1,7 +1,7 @@
 import { type Message, SlashCommandBuilder } from "discord.js";
 import { Commands } from "../enum";
 import type { CommandHandler } from "../typeing";
-import config from "../../config.json";
+import config from "../../../../config.json";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { log } from "..";
 const genAI = new GoogleGenerativeAI(config["gemini-api-key"]);
