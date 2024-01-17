@@ -10,10 +10,13 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@prisma/client": "5.8.1"
+    "@prisma/client": "^5.8.1"
   },
   "exports": {
     ".": "./index.ts",
-    "./prisma": "./prismatype.ts"
+    "./client": "./client.ts"
+  },
+  "scripts": {
+    "db:generate": "prisma generate"
   }
 }

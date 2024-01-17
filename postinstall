@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "初期化中"
+# 設定ファイルが存在しなければ生成する
 configfile="config.json"
 if [ ! -e $configfile ]; then
 
@@ -9,11 +9,15 @@ if [ ! -e $configfile ]; then
 }
 EOF
 
+	cd packages/database
+	# データベースが存在しなければ作成する
+	touch bot.db
+	# データベースに対して内容をpushする
+	bunx prisma db push
+
+	cd ../core
+	mkdir -p log
+
 fi
-cd packages/database
 
-touch bot.db
-bunx prisma db push
-
-cd ../core
-mkdir -p log
+# configファイルがあるなら多分初期化処理いらないよね大丈夫よね

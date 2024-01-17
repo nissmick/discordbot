@@ -9,9 +9,11 @@
 		"typescript": "^5.0.0"
 	},
 	"workspaces": [
-		"packages/core",
-		"packages/database"
+		"packages/*"
 	],
+	"engines": {
+		"bun": "*"
+	},
 	"scripts": {
 		"preinstall": "rm bun.lockb",
 		"postinstall": "chmod +x postinstall && ./postinstall",
