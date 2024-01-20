@@ -40,6 +40,32 @@
 		"gemini-api-key": {
 			"type": "string",
 			"title": "Gemini ProのAPIキー"
+		},
+		"oauth2": {
+			"title": "Discordと連携するための",
+			"type": "object",
+			"properties": {
+				"secret": {
+					"type": "string",
+					"title": "client secret"
+				},
+				"redirect": {
+					"type": "string",
+					"title": "callbackのuri"
+				},
+				"scope": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"title": "要求する権限"
+				}
+			},
+			"required": [
+				"secret",
+				"redirect",
+				"scope"
+			]
 		}
 	},
 	"required": [
@@ -48,6 +74,7 @@
 		"homeserver",
 		"admins",
 		"hosts",
-		"gemini-api-key"
+		"gemini-api-key",
+		"oauth2"
 	]
 }

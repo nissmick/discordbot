@@ -12,7 +12,6 @@ model User {
     id                         Int                    @id @default(autoincrement())
     discord_id                 BigInt                 @unique
     iconUrl                    String                 @default("https://discord.com/assets/5d6a5e9d7d77ac29116e.png") @map("icon_url")
-    screen_name                String
     loginBonusId               Int                    @unique
     emoji_default_server       String                 @default("misskey.io")
     isBot                      Boolean
@@ -20,14 +19,17 @@ model User {
     LoginBonus                 LoginBonus             @relation(fields: [loginBonusId], references: [id])
     collaboratedMessage        CollaborativeMessage[] @relation("collaborator")
     createdCollaboratedMessage CollaborativeMessage[]
-    //dAuthId                    Int?                   @unique
-    //dAuth                      DiscordAuth?           @relation(fields: [dAuthId], references: [id])
+    dAuthId                    Int?                   @unique
+    dAuth                      DiscordAuth?           @relation(fields: [dAuthId], references: [id])
 }
 
-//model DiscordAuth {
-//id   Int    @id @default(autoincrement())
-//  User User[]
-//}
+model DiscordAuth {
+    id           Int    @id @default(autoincrement())
+    User         User[]
+    accessToken  String
+    refreshToken String
+    expiresIn    Int
+}
 
 model LoginBonus {
     id                    Int      @id @default(autoincrement())
