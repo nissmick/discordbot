@@ -211,14 +211,12 @@ client.once(Events.ClientReady, async (readyClient) => {
 				create: {
 					discord_id: BigInt(member.user.id),
 					discord_username: member.user.username + member.user.tag ? `#${member.user.tag}` : "",
-					screen_name: member.displayName,
 					LoginBonus: {
 						create: {},
 					},
 					isBot: member.user.bot,
 				},
 				update: {
-					screen_name: member.displayName,
 					discord_username: member.user.tag,
 					isBot: member.user.bot,
 					iconUrl: member.user.displayAvatarURL({ extension: "png" }),

@@ -12,7 +12,6 @@ type UserData = {
 	discord_username: string;
 	id: number;
 	discord_id: bigint;
-	screen_name: string;
 	emoji_default_server: string;
 	emojiResolver: EmojiResolver;
 };
