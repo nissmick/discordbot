@@ -2,7 +2,6 @@
 backup/*
 bun.lockb
 bot.db-journal
-**/prisma/migrations/**/*
 bot.db
 config.json
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
