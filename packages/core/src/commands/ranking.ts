@@ -24,41 +24,41 @@ export const execute: CommandHandler = async (interaction) => {
 	const embed = new EmbedBuilder().setTitle("Ranking");
 	const matcheduser = await prisma.user.findMany({
 		where: {
-			LoginBonus: {
+			loginBonus: {
 				count: {
 					gte: min_login,
 				},
 			},
 		},
 		include: {
-			LoginBonus: true,
+			loginBonus: true,
 		},
 		orderBy: {
-			LoginBonus: {
+			loginBonus: {
 				count: "desc",
 			},
 		},
 	});
 	let result_text = "";
 
-	const max = Math.max(...matcheduser.map((item) => item.LoginBonus!.count));
+	const max = Math.max(...matcheduser.map((item) => item.loginBonus!.count));
 	let beforecount = max;
 	let index = 1;
 	matcheduser.forEach((user, i) => {
-		const lastLogin = Math.floor(calcJST(user.LoginBonus!.LastLogin));
+		const lastLogin = Math.floor(calcJST(user.loginBonus!.LastLogin));
 		const nowDate = Math.floor(calcJST(now));
 		const datediff = Math.floor(nowDate - lastLogin);
 
-		const { count } = user.LoginBonus!;
+		const { count } = user.loginBonus!;
 		if (beforecount !== count) {
 			beforecount = count;
 			index = i + 1;
 		}
 		console.log(user.discord_username + ` count: ${count}`);
 		if (count === max) {
-			result_text += `**#${index} |<@${user.discord_id}> ${count}日** `;
+			result_text += `**#${index} |<@${user.id}> ${count}日** `;
 		} else {
-			result_text += `#${index} |<@${user.discord_id}> ${count}日 `;
+			result_text += `#${index} |<@${user.id}> ${count}日 `;
 		}
 		result_text += datediff === 0 ? "`today`" : datediff === 1 ? "`yesterday`" : `\`${datediff} days ago\``;
 		result_text += "\n";

@@ -8,34 +8,32 @@ datasource db {
 }
 
 model User {
+    id                         BigInt                 @id @map("discord_id")
     discord_username           String                 @unique
-    id                         Int                    @id @default(autoincrement())
-    discord_id                 BigInt                 @unique
     iconUrl                    String                 @default("https://discord.com/assets/5d6a5e9d7d77ac29116e.png") @map("icon_url")
-    loginBonusId               Int                    @unique
     emoji_default_server       String                 @default("misskey.io")
     isBot                      Boolean
-    Prompts                    Prompts[]
-    LoginBonus                 LoginBonus             @relation(fields: [loginBonusId], references: [id])
+    prompts                    Prompts[]
+    loginBonus                 LoginBonus?
     collaboratedMessage        CollaborativeMessage[] @relation("collaborator")
     createdCollaboratedMessage CollaborativeMessage[]
-    dAuthId                    Int?                   @unique
-    dAuth                      DiscordAuth?           @relation(fields: [dAuthId], references: [id])
+    dAuth                      DiscordAuth?
     refreshTokens              RefreshToken[]
 
-    @@index([discord_id, discord_username])
+    @@index([discord_username])
 }
 
 model RefreshToken {
-    token    String   @id
-    userId   Int
-    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     expireAt DateTime
+    token    String   @id
+    userId   BigInt
+    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DiscordAuth {
     id           Int    @id @default(autoincrement())
-    User         User[]
+    userId       BigInt @unique
+    user         User   @relation(fields: [userId], references: [id])
     accessToken  String
     refreshToken String
     expiresIn    Int
@@ -48,14 +46,15 @@ model LoginBonus {
     LastLogin             DateTime @default(dbgenerated("0"))
     consecutive_count     Int      @default(0)
     max_consecutive_count Int      @default(0)
-    User                  User[]
+    user                  User     @relation(fields: [userId], references: [id])
+    userId                BigInt   @unique
 }
 
 model Prompts {
     id       Int      @id @default(autoincrement())
     authorId BigInt
     content  Prompt[]
-    author   User     @relation(fields: [authorId], references: [discord_id])
+    author   User     @relation(fields: [authorId], references: [id])
 }
 
 model Prompt {
@@ -76,7 +75,7 @@ model CollaborativeMessage {
     editable     CollaborativeMessageEditablePermission[]
     collaborator User[]                                   @relation("collaborator")
     author       User                                     @relation(fields: [authorUserId], references: [id])
-    authorUserId Int
+    authorUserId BigInt
 }
 
 model CollaborativeMessageEditablePermission {

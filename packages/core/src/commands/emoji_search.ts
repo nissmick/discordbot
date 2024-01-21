@@ -33,10 +33,11 @@ export const execute: CommandHandler = async (interaction, user) => {
 			"g"
 		);
 	} catch (e) {
-		return interaction.reply({
+		interaction.reply({
 			content: "RegExp Error...",
 			ephemeral: true,
 		});
+		return;
 	}
 	await interaction.deferReply();
 

@@ -75,16 +75,13 @@ const app = new Hono().get("/callback", async (c) => {
 			);
 		}
 		const { user } = fetched;
-		const column = await prisma.user.findUnique({
-			select: {
-				dAuthId: true,
-			},
+		const column = await prisma.discordAuth.findUnique({
 			where: {
-				discord_id: BigInt(user.id),
+				userId: BigInt(user.id),
 			},
 		});
 		// authがもうある
-		if (column?.dAuthId) {
+		if (column) {
 			return c.json({
 				status: true,
 				message: "あなたはもうカラムあります",
@@ -95,17 +92,17 @@ const app = new Hono().get("/callback", async (c) => {
 		// カラムなかった時
 		await prisma.discordAuth.create({
 			data: {
-				User: {
+				user: {
 					// ユーザーがいたら接続、いなければ作る
 					connectOrCreate: {
 						where: {
-							discord_id: BigInt(user.id),
+							id: BigInt(user.id),
 						},
 						create: {
 							isBot: false,
 							discord_username: user.username,
-							discord_id: BigInt(user.id),
-							LoginBonus: {
+							id: BigInt(user.id),
+							loginBonus: {
 								create: {},
 							},
 							iconUrl: user.avatar
@@ -186,7 +183,7 @@ async function generateJWT(id: string) {
 			token: crypto.randomUUID(),
 			user: {
 				connect: {
-					discord_id: BigInt(id),
+					id: BigInt(id),
 				},
 			},
 		},

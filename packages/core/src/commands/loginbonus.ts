@@ -23,7 +23,13 @@ export const execute: CommandHandler = async (interaction, user) => {
 		fetchReply: true,
 	});
 	const now = new Date();
-	const LoginBonus = user.LoginBonus;
+	const LoginBonus =
+		user.loginBonus ||
+		(await prisma.loginBonus.create({
+			data: {
+				userId: user.id,
+			},
+		}));
 	console.log(LoginBonus);
 	const lastLogin = Math.floor(calcJST(LoginBonus.LastLogin));
 	const nowDate = Math.floor(calcJST(now));
@@ -50,23 +56,16 @@ export const execute: CommandHandler = async (interaction, user) => {
 		max_consecutive_count = LoginBonus.max_consecutive_count;
 	}
 
-	const result = await prisma.user.update({
+	const result = await prisma.loginBonus.update({
 		where: {
-			discord_id: BigInt(interaction.user.id),
+			userId: user.id,
 		},
 		data: {
-			LoginBonus: {
-				update: {
-					Dates: LoginBonus.Dates + "," + now.toISOString(),
-					count: LoginBonus.count + 1,
-					LastLogin: now,
-					consecutive_count,
-					max_consecutive_count,
-				},
-			},
-		},
-		include: {
-			LoginBonus: true,
+			Dates: LoginBonus.Dates + "," + now.toISOString(),
+			count: LoginBonus.count + 1,
+			LastLogin: now,
+			consecutive_count,
+			max_consecutive_count,
 		},
 	});
 	const embed = new EmbedBuilder()
@@ -74,12 +73,12 @@ export const execute: CommandHandler = async (interaction, user) => {
 		.setFields(
 			{
 				name: "確認日数",
-				value: result.LoginBonus!.count.toString() + "日" || "計測不可",
+				value: result.count.toString() + "日" || "計測不可",
 				inline: false,
 			},
 			{
 				name: "連続ログイン日数",
-				value: result.LoginBonus!.consecutive_count.toString() + "日" || "計測不可",
+				value: result.consecutive_count.toString() + "日" || "計測不可",
 				inline: false,
 			}
 		)

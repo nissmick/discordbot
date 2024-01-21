@@ -143,15 +143,15 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 async function commandHandler(interaction: ChatInputCommandInteraction) {
 	const userdata = (await prisma.user.findUnique({
 		where: {
-			discord_id: BigInt(interaction.user.id),
+			id: BigInt(interaction.user.id),
 		},
 		include: {
-			LoginBonus: true,
+			loginBonus: true,
 		},
 	}))!;
 	const user = {
 		...userdata,
-		emojiResolver: emojiResolvers.get(userdata.discord_id)!,
+		emojiResolver: emojiResolvers.get(userdata.id)!,
 	};
 	const arg = [interaction, user] as const;
 	switch (interaction.commandName) {
@@ -206,12 +206,12 @@ client.once(Events.ClientReady, async (readyClient) => {
 		try {
 			const userdata = await prisma.user.upsert({
 				where: {
-					discord_id: BigInt(member.user.id),
+					id: BigInt(member.user.id),
 				},
 				create: {
-					discord_id: BigInt(member.user.id),
+					id: BigInt(member.user.id),
 					discord_username: member.user.username + member.user.tag ? `#${member.user.tag}` : "",
-					LoginBonus: {
+					loginBonus: {
 						create: {},
 					},
 					isBot: member.user.bot,

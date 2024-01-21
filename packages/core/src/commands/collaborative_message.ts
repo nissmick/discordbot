@@ -78,23 +78,8 @@ export const command = new SlashCommandBuilder()
 	.addSubcommand((o) =>
 		o.setName(SubCommand.inspect.name).setDescription("選択している共同編集可能メッセージの詳細な情報を取得する")
 	);
-export const execute: CommandHandler = async (interaction) => {
-	const commandName = interaction.options.getSubcommand(true) as keyof typeof SubCommand;
-	switch (commandName) {
-		case "create":
-			await createHandler(interaction);
-			break;
-		case "add_editable":
-			await addEditableHandler(interaction);
-			break;
-		case "inspect":
-			await inspectCommandHandler(interaction);
-			break;
-	}
-	return;
-};
 
-async function createHandler(interaction: ChatInputCommandInteraction) {
+const createHandler: CommandHandler = async (interaction, user) => {
 	const editable = interaction.options.getMentionable(SubCommand.create.options.editable, false);
 	if (!interaction.inGuild()) return;
 	if (!interaction.channel) {
@@ -136,7 +121,7 @@ async function createHandler(interaction: ChatInputCommandInteraction) {
 			},
 			author: {
 				connect: {
-					discord_id: BigInt(interaction.user.id),
+					id: user.id,
 				},
 			},
 		},
@@ -166,9 +151,9 @@ async function createHandler(interaction: ChatInputCommandInteraction) {
 
 	await interaction.showModal(modal);
 	return;
-}
+};
 
-async function addEditableHandler(interaction: ChatInputCommandInteraction) {
+const addEditableHandler: CommandHandler = async (interaction, user) => {
 	const editable = interaction.options.getMentionable(SubCommand.add_editable.options.editable, true);
 	const message = selected.get(interaction.user.id);
 	if (!message) {
@@ -178,7 +163,7 @@ async function addEditableHandler(interaction: ChatInputCommandInteraction) {
 		});
 		return;
 	}
-	if (!(message.author.discord_id === BigInt(interaction.user.id))) {
+	if (!(message.author.id === user.id)) {
 		await interaction.reply({
 			ephemeral: true,
 			content:
@@ -229,7 +214,7 @@ async function addEditableHandler(interaction: ChatInputCommandInteraction) {
 		},
 		flags: ["SuppressEmbeds"],
 	});
-}
+};
 
 export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) => {
 	if (!interaction.inGuild()) return;
@@ -282,7 +267,7 @@ export const modalSubmitHandler = async (interaction: ModalSubmitInteraction) =>
 			content: content,
 			collaborator: {
 				connect: {
-					discord_id: BigInt(interaction.user.id),
+					id: BigInt(interaction.user.id),
 				},
 			},
 		},
@@ -370,13 +355,13 @@ async function inspectCommandHandler(interaction: ChatInputCommandInteraction) {
 		.setAuthor({
 			name: column.author.discord_username + "によるメッセージ",
 			iconURL: column.author.iconUrl,
-			url: `https://discord.com/users/${column.author.discord_id}`,
+			url: `https://discord.com/users/${column.author.id}`,
 		})
 		.setURL(`https://discord.com/channels/${column.guildId}/${column.channelId}/${column.messageId}`)
 		.setDescription("このメッセージの詳細")
 		.addFields({
 			name: "編集者",
-			value: column.collaborator.map((user) => `<@${user.discord_id}>`).join("\n"),
+			value: column.collaborator.map((user) => `<@${user.id}>`).join("\n"),
 			inline: true,
 		})
 		.addFields({
@@ -417,3 +402,19 @@ function checkPermitted(
 	}
 	return isEditable;
 }
+
+export const execute: CommandHandler = async (interaction, user) => {
+	const commandName = interaction.options.getSubcommand(true) as keyof typeof SubCommand;
+	switch (commandName) {
+		case "create":
+			await createHandler(interaction, user);
+			break;
+		case "add_editable":
+			await addEditableHandler(interaction, user);
+			break;
+		case "inspect":
+			await inspectCommandHandler(interaction);
+			break;
+	}
+	return;
+};

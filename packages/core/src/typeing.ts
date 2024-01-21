@@ -1,17 +1,17 @@
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from "discord.js";
 import type { EmojiResolver } from "./emoji_store";
 type UserData = {
-	LoginBonus: {
+	loginBonus: {
 		id: number;
 		count: number;
 		Dates: string;
 		LastLogin: Date;
 		consecutive_count: number;
 		max_consecutive_count: number;
-	};
+	} | null;
 	discord_username: string;
-	id: number;
-	discord_id: bigint;
+
+	id: bigint;
 	emoji_default_server: string;
 	emojiResolver: EmojiResolver;
 };
