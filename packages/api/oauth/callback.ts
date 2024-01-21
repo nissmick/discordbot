@@ -82,11 +82,18 @@ const app = new Hono().get("/callback", async (c) => {
 		});
 		// authがもうある
 		if (column) {
+			const jwt = await generateJWT(user.id);
 			return c.json({
 				status: true,
 				message: "あなたはもうカラムあります",
 				user,
-				token: await generateJWT(user.id),
+				token: {
+					token: jwt.token,
+					refresh: {
+						token: jwt.refresh.token,
+						expireAt: jwt.refresh.expireAt,
+					},
+				},
 			});
 		}
 		// カラムなかった時
@@ -116,12 +123,19 @@ const app = new Hono().get("/callback", async (c) => {
 				refreshToken: authData.refresh_token,
 			},
 		});
+		const jwt = await generateJWT(user.id);
 		return c.json(
 			{
 				status: true,
 				user,
 				message: "テーブルを作成しました",
-				token: await generateJWT(user.id),
+				token: {
+					token: jwt.token,
+					refresh: {
+						token: jwt.refresh.token,
+						expireAt: jwt.refresh.expireAt,
+					},
+				},
 			},
 			201
 		);
@@ -164,7 +178,7 @@ async function fetchUserFromAccesToken(
 
 export default app;
 
-async function generateJWT(id: string) {
+export async function generateJWT(id: string) {
 	const token = jwt.sign(
 		{
 			user: id,
