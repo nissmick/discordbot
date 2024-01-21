@@ -21,6 +21,16 @@ model User {
     createdCollaboratedMessage CollaborativeMessage[]
     dAuthId                    Int?                   @unique
     dAuth                      DiscordAuth?           @relation(fields: [dAuthId], references: [id])
+    refreshTokens              RefreshToken[]
+
+    @@index([discord_id, discord_username])
+}
+
+model RefreshToken {
+    token    String   @id
+    userId   Int
+    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    expireAt DateTime
 }
 
 model DiscordAuth {

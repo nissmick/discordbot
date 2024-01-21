@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import config from "../../../config.json";
 import prisma from "database";
-
+import jwt from "jsonwebtoken";
 import { APIUser } from "discord-api-types/v10";
 
 type DiscordOAuth2JSON = {
@@ -89,6 +89,7 @@ const app = new Hono().get("/callback", async (c) => {
 				status: true,
 				message: "あなたはもうカラムあります",
 				user,
+				token: await generateJWT(user.id),
 			});
 		}
 		// カラムなかった時
@@ -107,7 +108,9 @@ const app = new Hono().get("/callback", async (c) => {
 							LoginBonus: {
 								create: {},
 							},
-							iconUrl: user.avatar ?? undefined,
+							iconUrl: user.avatar
+								? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+								: undefined,
 						},
 					},
 				},
@@ -121,6 +124,7 @@ const app = new Hono().get("/callback", async (c) => {
 				status: true,
 				user,
 				message: "テーブルを作成しました",
+				token: await generateJWT(user.id),
 			},
 			201
 		);
@@ -162,3 +166,56 @@ async function fetchUserFromAccesToken(
 }
 
 export default app;
+
+async function generateJWT(id: string) {
+	const token = jwt.sign(
+		{
+			user: id,
+		},
+		config.jwt.secret,
+		{
+			algorithm: "HS256",
+			subject: "user",
+			expiresIn: 1_000 * 60 * 5, // 5分
+		}
+	);
+	const date = new Date(Date.now() + 1_000 * 3_600 * 24 * 7); // 7日間
+	const refresh = await prisma.refreshToken.create({
+		data: {
+			expireAt: date,
+			token: crypto.randomUUID(),
+			user: {
+				connect: {
+					discord_id: BigInt(id),
+				},
+			},
+		},
+	});
+	return {
+		token,
+		refresh,
+	};
+}
+type JwtError = "TOKEN_INVALID" | "TOKEN_EXPIRED" | "TOKEN_NOTBEFORE";
+export function jwtVerifiy(
+	token: string
+): { status: true; verifyed: { [x: string]: unknown } } | { status: false; reason: JwtError } {
+	try {
+		const verifyed = jwt.verify(token, config.jwt.secret, {
+			algorithms: ["HS256"],
+		}) as { [x: string]: unknown };
+		return { status: true, verifyed };
+	} catch (e) {
+		if (e instanceof jwt.JsonWebTokenError) {
+			return { status: false, reason: "TOKEN_INVALID" };
+		} else if (e instanceof jwt.TokenExpiredError) {
+			return { status: false, reason: "TOKEN_EXPIRED" };
+		} else if (e instanceof jwt.NotBeforeError) {
+			return { status: false, reason: "TOKEN_NOTBEFORE" };
+		} else {
+			throw new Error("Token認証時に予期せぬエラー", {
+				cause: e,
+			});
+		}
+	}
+}

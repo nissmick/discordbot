@@ -66,6 +66,17 @@
 				"redirect",
 				"scope"
 			]
+		},
+		"jwt": {
+			"type": "object",
+			"properties": {
+				"secret": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"secret"
+			]
 		}
 	},
 	"required": [
@@ -75,6 +86,7 @@
 		"admins",
 		"hosts",
 		"gemini-api-key",
-		"oauth2"
+		"oauth2",
+		"jwt"
 	]
 }
