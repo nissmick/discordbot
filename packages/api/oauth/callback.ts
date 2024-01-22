@@ -178,10 +178,10 @@ async function fetchUserFromAccesToken(
 
 export default app;
 
-export async function generateJWT(id: string) {
+export async function generateJWT(id: string | bigint) {
 	const token = jwt.sign(
 		{
-			user: id,
+			user: id.toString(),
 		},
 		config.jwt.secret,
 		{
@@ -207,15 +207,21 @@ export async function generateJWT(id: string) {
 		refresh,
 	};
 }
-type JwtError = "TOKEN_INVALID" | "TOKEN_EXPIRED" | "TOKEN_NOTBEFORE";
-export function jwtVerifiy(
+export type JwtError = "TOKEN_INVALID" | "TOKEN_EXPIRED" | "TOKEN_NOTBEFORE";
+export type UserJwt = {
+	user: string;
+	iat: number;
+	exp: number;
+	sub: string;
+};
+export function jwtVerify<T extends { [x: string]: unknown } = { [x: string]: unknown }>(
 	token: string
-): { status: true; verifyed: { [x: string]: unknown } } | { status: false; reason: JwtError } {
+): { status: true; verified: T } | { status: false; reason: JwtError } {
 	try {
-		const verifyed = jwt.verify(token, config.jwt.secret, {
+		const verified = jwt.verify(token, config.jwt.secret, {
 			algorithms: ["HS256"],
-		}) as { [x: string]: unknown };
-		return { status: true, verifyed };
+		}) as T;
+		return { status: true, verified };
 	} catch (e) {
 		if (e instanceof jwt.JsonWebTokenError) {
 			return { status: false, reason: "TOKEN_INVALID" };
