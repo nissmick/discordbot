@@ -2,8 +2,9 @@ import { Hono } from "hono";
 import { vValidator } from "@hono/valibot-validator";
 import * as v from "valibot";
 import { prisma } from "../core/src/store";
-import { JwtError, UserJwt, generateJWT, jwtVerify } from "./oauth/callback";
-import { badRequest, unauthorized } from "./template";
+import { generateJWT } from "./@auth";
+import { badRequest, unauthorized } from "./@template";
+import { checkAuth } from "./@auth";
 const reqType = v.object({
 	refresh: v.string(),
 });
@@ -70,16 +71,6 @@ const app = new Hono().post(
 
 function findRefreshToken(refresh_token: string) {
 	return prisma.refreshToken.findUnique({ where: { token: refresh_token } });
-}
-
-function checkAuth(authHeader: string): { valid: false; reason: JwtError } | { valid: true; data: UserJwt } {
-	const token = authHeader.replace("Bearer ", "");
-	const verify = jwtVerify<UserJwt>(token);
-	if (verify.status) {
-		return { valid: true, data: verify.verified };
-	} else {
-		return { valid: false, reason: verify.reason };
-	}
 }
 
 export default app;

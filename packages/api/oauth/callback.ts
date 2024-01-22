@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import config from "../../../config.json";
 import prisma from "database";
-import jwt from "jsonwebtoken";
 import { APIUser } from "discord-api-types/v10";
+import { generateJWT } from "../@auth";
+import * as v from "valibot";
+import { vValidator } from "@hono/valibot-validator";
 
 type DiscordOAuth2JSON = {
 	// eslint-disable-next-line @typescript-eslint/ban-types
@@ -17,17 +19,12 @@ type OAuth2Error = {
 	error_description: string;
 };
 
-const app = new Hono().get("/callback", async (c) => {
-	const query = c.req.query();
-	if (!("code" in query)) {
-		return c.json(
-			{
-				status: false,
-				error: "code missing",
-			},
-			400
-		);
-	}
+const reqType = v.object({
+	code: v.string(),
+});
+
+const app = new Hono().get("/callback", vValidator("query", reqType), async (c) => {
+	const query = c.req.valid("query");
 	const payload = new URLSearchParams({
 		client_id: config.client_id,
 		client_secret: config.oauth2.secret,
@@ -177,62 +174,3 @@ async function fetchUserFromAccesToken(
 }
 
 export default app;
-
-export async function generateJWT(id: string | bigint) {
-	const token = jwt.sign(
-		{
-			user: id.toString(),
-		},
-		config.jwt.secret,
-		{
-			algorithm: "HS256",
-			subject: "user",
-			expiresIn: 1_000 * 60 * 5, // 5分
-		}
-	);
-	const date = new Date(Date.now() + 1_000 * 3_600 * 24 * 7); // 7日間
-	const refresh = await prisma.refreshToken.create({
-		data: {
-			expireAt: date,
-			token: crypto.randomUUID(),
-			user: {
-				connect: {
-					id: BigInt(id),
-				},
-			},
-		},
-	});
-	return {
-		token,
-		refresh,
-	};
-}
-export type JwtError = "TOKEN_INVALID" | "TOKEN_EXPIRED" | "TOKEN_NOTBEFORE";
-export type UserJwt = {
-	user: string;
-	iat: number;
-	exp: number;
-	sub: string;
-};
-export function jwtVerify<T extends { [x: string]: unknown } = { [x: string]: unknown }>(
-	token: string
-): { status: true; verified: T } | { status: false; reason: JwtError } {
-	try {
-		const verified = jwt.verify(token, config.jwt.secret, {
-			algorithms: ["HS256"],
-		}) as T;
-		return { status: true, verified };
-	} catch (e) {
-		if (e instanceof jwt.JsonWebTokenError) {
-			return { status: false, reason: "TOKEN_INVALID" };
-		} else if (e instanceof jwt.TokenExpiredError) {
-			return { status: false, reason: "TOKEN_EXPIRED" };
-		} else if (e instanceof jwt.NotBeforeError) {
-			return { status: false, reason: "TOKEN_NOTBEFORE" };
-		} else {
-			throw new Error("Token認証時に予期せぬエラー", {
-				cause: e,
-			});
-		}
-	}
-}
