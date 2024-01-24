@@ -5,6 +5,7 @@ import { prisma } from "../core/src/store";
 import { generateJWT } from "./@auth";
 import { badRequest, unauthorized } from "./@template";
 import { checkAuth } from "./@auth";
+import { sha } from "bun";
 const reqType = v.object({
 	refresh: v.string(),
 });
@@ -70,7 +71,7 @@ const app = new Hono().post(
 );
 
 function findRefreshToken(refresh_token: string) {
-	return prisma.refreshToken.findUnique({ where: { token: refresh_token } });
+	return prisma.refreshToken.findUnique({ where: { token: sha(refresh_token, "base64") } });
 }
 
 export default app;

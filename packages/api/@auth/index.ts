@@ -1,7 +1,8 @@
 import prisma from "database";
 import jwt from "jsonwebtoken";
 import config from "../../../config.json";
-
+import * as crypto from "node:crypto";
+import { sha } from "bun";
 export async function generateJWT(id: string | bigint) {
 	const token = jwt.sign(
 		{
@@ -15,6 +16,7 @@ export async function generateJWT(id: string | bigint) {
 		}
 	);
 	const date = new Date(Date.now() + 1000 * 3600 * 24 * 7); // 7日間
+	const refresh_token = crypto.randomUUID();
 	const refresh = await prisma.refreshToken.create({
 		data: {
 			expireAt: date,
@@ -23,11 +25,15 @@ export async function generateJWT(id: string | bigint) {
 					id: BigInt(id),
 				},
 			},
+			token: sha(refresh_token, "base64"),
 		},
 	});
 	return {
 		token,
-		refresh,
+		refresh: {
+			expireAt: refresh.expireAt,
+			token: refresh_token,
+		},
 	};
 }
 export function jwtVerify<T extends { [x: string]: unknown } = { [x: string]: unknown }>(

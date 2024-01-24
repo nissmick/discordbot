@@ -54,7 +54,7 @@ const app = new Hono().get("/callback", vValidator("query", reqType), async (c) 
 					message: `${config.oauth2.scope.join(",")}が必要ですが、そのうち${
 						authData.scope
 					}しか渡されませんでした。`,
-				},
+				} as const,
 				403
 			);
 		}
@@ -67,7 +67,7 @@ const app = new Hono().get("/callback", vValidator("query", reqType), async (c) 
 					status: false,
 					error: "internal server error",
 					message: "不明なエラーです",
-				},
+				} as const,
 				500
 			);
 		}
@@ -91,7 +91,7 @@ const app = new Hono().get("/callback", vValidator("query", reqType), async (c) 
 						expireAt: jwt.refresh.expireAt,
 					},
 				},
-			});
+			} as const);
 		}
 		// カラムなかった時
 		await prisma.discordAuth.create({
@@ -133,7 +133,7 @@ const app = new Hono().get("/callback", vValidator("query", reqType), async (c) 
 						expireAt: jwt.refresh.expireAt,
 					},
 				},
-			},
+			} as const,
 			201
 		);
 	} else {
@@ -141,17 +141,19 @@ const app = new Hono().get("/callback", vValidator("query", reqType), async (c) 
 		if (json.error === "invalid_grant") {
 			return c.json(
 				{
+					status: false,
 					error: "CODE_INVALID",
 					message: "codeが無効です。",
-				},
+				} as const,
 				400
 			);
 		}
 		console.error(json);
 		return c.json(
 			{
+				status: false,
 				error: "internal server error",
-			},
+			} as const,
 			500
 		);
 	}
