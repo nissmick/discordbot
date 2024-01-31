@@ -45,9 +45,9 @@ export const execute: CommandHandler = async (interaction) => {
 	let beforecount = max;
 	let index = 1;
 	matcheduser.forEach((user, i) => {
-		const lastLogin = Math.floor(calcJST(user.loginBonus!.LastLogin));
-		const nowDate = Math.floor(calcJST(now));
-		const datediff = Math.floor(nowDate - lastLogin);
+		const last_login = Math.floor(calcJST(user.loginBonus!.LastLogin));
+		const now_date = Math.floor(calcJST(now));
+		const datediff = Math.floor(now_date - last_login);
 
 		const { count } = user.loginBonus!;
 		if (beforecount !== count) {
