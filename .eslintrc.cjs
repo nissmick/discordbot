@@ -27,7 +27,7 @@ module.exports = {
 		quotes: ["error", "double"],
 		semi: ["error", "always"],
 		// 命名規則縛りたいのに動かない気がするんです、どういうことなんでしょう、気のせいですこと?
-		"@typescript-eslint/naming-convention": [
+		/*"@typescript-eslint/naming-convention": [
 			"error",
 			{
 				selector: "typeLike",
@@ -40,7 +40,7 @@ module.exports = {
 			{
 				selector: "function",
 				format: ["camelCase"],
-			},
-		],
+			}
+		],*/
 	},
 };
