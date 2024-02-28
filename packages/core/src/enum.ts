@@ -9,6 +9,7 @@ export const Commands = {
 	askai: "askai",
 	youyaku: "youyaku",
 	collaborative_message: "collaborative_message",
+	export: "export",
 } as const;
 
 export const Channels = {

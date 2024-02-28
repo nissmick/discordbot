@@ -13,7 +13,8 @@ export const calcJST = calcLocaledDate.bind(null, 9);
 const NowProcessing = new Map<string, boolean>();
 
 export const command = new SlashCommandBuilder().setName(Commands.logincheck).setDescription("出席を確認");
-export const execute: CommandHandler = async (interaction, user) => {
+export const execute: CommandHandler = async (interaction, puser) => {
+	const user = await puser;
 	if (NowProcessing.get(interaction.user.id)) {
 		interaction.reply({ ephemeral: true, content: "処理中です" });
 		return;

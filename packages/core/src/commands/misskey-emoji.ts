@@ -27,7 +27,8 @@ export const command = new SlashCommandBuilder()
 			.setDescriptionLocalization("ja", "今回だけ優先するサーバー")
 			.setRequired(false)
 	);
-export const execute: CommandHandler = (interaction, user) => {
+export const execute: CommandHandler = async (interaction, user) => {
+	const solver = (await user).emojiResolver;
 	const emoji_name = interaction.options
 		.getString(Options.emoji_name, true)
 		.replace(/<?:([a-zA-Z0-9_-~]*):(?:\d+>)?/, "$1");
@@ -35,9 +36,9 @@ export const execute: CommandHandler = (interaction, user) => {
 		.getString(Options.server_name)
 		?.replace(/(https?:)?\/\/([a-zA-Z0-9-.]+\.[a-zA-Z0-9-]+).*/, "$1");
 	if (server_name) {
-		interaction.reply(user.emojiResolver.get(emoji_name, [server_name])?.url || "エラー");
+		interaction.reply(solver.get(emoji_name, [server_name])?.url || "エラー");
 	} else {
-		interaction.reply(user.emojiResolver.get(emoji_name)?.url || "エラー");
+		interaction.reply(solver.get(emoji_name)?.url || "エラー");
 	}
 };
 

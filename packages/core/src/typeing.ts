@@ -15,7 +15,7 @@ type UserData = {
 	emoji_default_server: string;
 	emojiResolver: EmojiResolver;
 };
-type CommandHandler = (interaction: ChatInputCommandInteraction, user: UserData) => void | Promise<void>;
+type CommandHandler = (interaction: ChatInputCommandInteraction, user: Promise<UserData>) => void | Promise<void>;
 type AutocompleteHandler = (interaction: AutocompleteInteraction, data: { emojiResolver: EmojiResolver }) => void;
 
 export type { CommandHandler, AutocompleteHandler };

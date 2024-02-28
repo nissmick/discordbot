@@ -119,11 +119,7 @@ const createHandler: CommandHandler = async (interaction, user) => {
 			editable: {
 				create: permitted,
 			},
-			author: {
-				connect: {
-					id: user.id,
-				},
-			},
+			authorUserId: user.id,
 		},
 	});
 	const continuebutton = new ButtonBuilder()

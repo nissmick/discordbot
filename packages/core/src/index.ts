@@ -19,6 +19,7 @@ import {
 	askai,
 	youyaku,
 	collaborative_message,
+	export as export_,
 } from "./commands";
 import { Channels, Commands } from "./enum";
 import { client, prisma } from "./store";
@@ -38,6 +39,7 @@ const commands = [
 	askai.command,
 	youyaku.command,
 	collaborative_message.command,
+	export_.command,
 ];
 const emojiResolvers: Map<bigint, EmojiResolver> = new Map();
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -141,19 +143,17 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 });
 
 async function commandHandler(interaction: ChatInputCommandInteraction) {
-	const userdata = (await prisma.user.findUnique({
-		where: {
-			id: BigInt(interaction.user.id),
-		},
-		include: {
-			loginBonus: true,
-		},
-	}))!;
-	const user = {
-		...userdata,
-		emojiResolver: emojiResolvers.get(userdata.id)!,
-	};
-	const arg = [interaction, user] as const;
+	const userdata = prisma.user
+		.findUnique({
+			where: {
+				id: BigInt(interaction.user.id),
+			},
+			include: {
+				loginBonus: true,
+			},
+		})
+		.then((userdata) => ({ ...userdata!, emojiResolver: emojiResolvers.get(userdata!.id)! }));
+	const arg = [interaction, userdata] as const;
 	switch (interaction.commandName) {
 		case Commands.greeting:
 			greeting.execute(...arg);
@@ -184,8 +184,9 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
 			break;
 		case Commands.collaborative_message:
 			await collaborative_message.execute(...arg);
-			console.log("command end");
 			break;
+		case Commands.export:
+			await export_.execute(...arg);
 	}
 }
 
@@ -194,14 +195,53 @@ client.once(Events.ClientReady, async (readyClient) => {
 		body: commands,
 	});
 	// 初期処理
+
 	const homeserver = client.guilds.cache.get(config.homeserver)!;
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+
+	console.log("Fetching Guilds...");
+	const guilds = await client.guilds.fetch();
+
+	for (const [id, guild] of guilds) {
+		console.log("Fetching Detailed Guild...");
+		const guild_detailed = await guild.fetch();
+		console.log("Fetching Channels...");
+		const channels = (await guild_detailed.channels.fetch()).filter(notNull);
+
+		await prisma.guild.upsert({
+			where: {
+				id,
+			},
+			create: {
+				id,
+				name: guild.name,
+				Channel: {
+					create: channels.map(({ id, name, type }) => ({
+						id,
+						name,
+						type,
+					})),
+				},
+			},
+			update: {
+				name: guild.name,
+				Channel: {
+					upsert: channels.map(({ name, id, type }) => ({
+						where: { id },
+						update: { name, type },
+						create: { id, name, type },
+					})),
+				},
+			},
+		});
+	}
+
 	console.log(homeserver.name);
 	// メンバーをfetchしてsqlに入れる
 	console.log("Fetching Member...");
 	const members = await homeserver.members.fetch();
 	console.log("Processing Member...");
-	for await (const [, member] of members) {
+	for (const [, member] of members) {
 		// console.log(member.user.username);
 		try {
 			const userdata = await prisma.user.upsert({
@@ -233,7 +273,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 	console.log("All Member Processed!");
 });
 
-console.log("Hello via Bun!");
+console.log("Hello viaaaaa!");
 
 client.login(config.token);
 
@@ -242,14 +282,23 @@ function logger(message: Message<true>, _type: "create" | "edit" | "delete") {
 	const time = `${message.createdAt.toISOString()} <t:${message.createdAt.valueOf().toString().slice(0, -3)}>`;
 	const author = `${message.author.tag}${message.author.bot ? " [bot]" : ""} <@${message.author.id}>`;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const guild = `${message.guildId === config.homeserver ? "" : message.guild.name}`;
+	const guild = `${message.guild.name}`;
 	const channel = `${message.channel.name} <#${message.channelId}>`;
 	const content = message.content;
 	const logtext = new LogtextBuilder({ sanitize: true });
-	logtext.setItem("time", time).setItem("author", author).setItem("content", content).setItem("channel", channel);
+	logtext
+		.setItem("time", time)
+		.setItem("author", author)
+		.setItem("content", content)
+		.setItem("channel", channel)
+		.setItem("guild", guild);
 	log(logtext.toString());
 }
 export function log(text: string) {
 	console.log(text);
 	fs.appendFileSync("./log/log.txt", text + "\n");
+}
+
+function notNull<T>(any: T): any is NonNullable<T> {
+	return any != null;
 }
