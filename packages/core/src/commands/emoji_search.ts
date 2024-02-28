@@ -10,7 +10,8 @@ export const command = new SlashCommandBuilder()
 	.setName(Commands.emoji_search)
 	.setDescription("絵文字を検索する")
 	.addStringOption((o) => o.setName(Options.query).setDescription("検索のクエリ").setRequired(true));
-export const execute: CommandHandler = async (interaction, user) => {
+export const execute: CommandHandler = async (interaction, puser) => {
+	const user = await puser;
 	const query = interaction.options.getString(Options.query, true);
 	const regexMeta = new RegExp(
 		"[" +
@@ -51,7 +52,7 @@ export const execute: CommandHandler = async (interaction, user) => {
 			")",
 		"g"
 	);
-	const emojis = user.emojiResolver.query(regex);
+	const emojis = await user.emojiResolver.query(regex);
 	const showText: string[] = [];
 	for (const [key, value] of emojis) {
 		showText.push(`----${key}----`);

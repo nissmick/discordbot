@@ -17,6 +17,9 @@ importers:
       '@hono/valibot-validator':
         specifier: ^0.2.1
         version: 0.2.2(hono@3.12.12)(valibot@0.26.0)
+      database:
+        specifier: workspace:*
+        version: link:../database
       discord-api-types:
         specifier: ^0.37.67
         version: 0.37.71

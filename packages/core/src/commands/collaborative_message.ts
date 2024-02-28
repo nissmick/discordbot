@@ -79,7 +79,8 @@ export const command = new SlashCommandBuilder()
 		o.setName(SubCommand.inspect.name).setDescription("選択している共同編集可能メッセージの詳細な情報を取得する")
 	);
 
-const createHandler: CommandHandler = async (interaction, user) => {
+const createHandler: CommandHandler = async (interaction, puser) => {
+	const user = await puser;
 	const editable = interaction.options.getMentionable(SubCommand.create.options.editable, false);
 	if (!interaction.inGuild()) return;
 	if (!interaction.channel) {
@@ -149,7 +150,8 @@ const createHandler: CommandHandler = async (interaction, user) => {
 	return;
 };
 
-const addEditableHandler: CommandHandler = async (interaction, user) => {
+const addEditableHandler: CommandHandler = async (interaction, puser) => {
+	const user = await puser;
 	const editable = interaction.options.getMentionable(SubCommand.add_editable.options.editable, true);
 	const message = selected.get(interaction.user.id);
 	if (!message) {
