@@ -71,6 +71,7 @@ model CollaborativeMessage {
     content      String
     messageId    String
     channelId    String
+    channel      Channel                                  @relation(fields: [channelId], references: [id])
     guildId      String
     editable     CollaborativeMessageEditablePermission[]
     collaborator User[]                                   @relation("collaborator")
@@ -84,4 +85,19 @@ model CollaborativeMessageEditablePermission {
     isRole                 Boolean
     permitted              String
     CollaborativeMessage   CollaborativeMessage @relation(fields: [collaborativeMessageId], references: [id], onDelete: Cascade)
+}
+
+model Channel {
+    id                   String                 @id
+    name                 String
+    type                 Int?
+    guild                Guild                  @relation(fields: [guildId], references: [id])
+    guildId              String
+    CollaborativeMessage CollaborativeMessage[]
+}
+
+model Guild {
+    id      String    @id
+    name    String
+    Channel Channel[]
 }
