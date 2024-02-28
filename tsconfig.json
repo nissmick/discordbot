@@ -9,6 +9,7 @@
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "isolatedModules": true,
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
@@ -17,12 +18,10 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "types": [
-      "bun-types" // add Bun global
-    ]
   },
   "include": [
     "config.json",
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "packages/database/drizzle/schema[.]ts"
   ]
 }
